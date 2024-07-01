@@ -1,0 +1,11 @@
+---
+- name: "Nvidia | {{ ansible_distribution }} | Install Nvidia with pacman"
+  become: true
+  ansible.builtin.pacman:
+    name:
+      - nvidia-dkms
+      - nvidia-utils
+      - libva-nvidia-driver
+      - nvidia-container-toolkit
+      - nvidia-settings
+    state: present
