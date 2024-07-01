@@ -159,7 +159,7 @@ case $ID in
 ubuntu)
 	ubuntu_setup
 	;;
-arch | endeavouros | manjaro)
+endeavouros | arch | manjaro)
 	arch_setup
 	;;
 *)
