@@ -1,0 +1,18 @@
+---
+- name: "latex-mk | {{ ansible_distribution }} | Install using yay"
+  kewlfft.aur.aur:
+    name: "latex-mk"
+    state: present
+- name: "latexrun-git | {{ ansible_distribution }} | Install using yay"
+  kewlfft.aur.aur:
+    name: "latexrun-git"
+    state: present
+- name: "zathura | {{ ansible_distribution }} | Install using yay"
+  kewlfft.aur.aur:
+    name: "zathura"
+    state: present
+- name: "zathura-pdf-poppler | {{ ansible_distribution }} | Install using yay"
+  kewlfft.aur.aur:
+    name: "zathura-pdf-poppler"
+    state: present
+    

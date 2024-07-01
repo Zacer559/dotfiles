@@ -1,5 +1,37 @@
 ---
-- name: "Neovim | {{ ansible_distribution }} | Install Neovim Nightly"
+- name: "Neovim | {{ ansible_distribution }} | Install Neovim "
   kewlfft.aur.aur:
-    name: neovim-git
+    name: "neovim"
     state: present
+    update_cache: yes
+
+- name: "Base-devel | {{ ansible_distribution }} | Install using yay"
+  kewlfft.aur.aur:
+    name: "base-devel"
+    state: present
+
+- name: "ripgrep | {{ ansible_distribution }} | Install using yay"
+  kewlfft.aur.aur:
+    name: "ripgrep"
+    state: present
+
+- name: "luarocks | {{ ansible_distribution }} | Install using yay"
+  kewlfft.aur.aur:
+    name: "luarocks"
+    state: present
+
+- name: "lua51 | {{ ansible_distribution }} | Install using yay"
+  kewlfft.aur.aur:
+    name: "lua51"
+    state: present
+
+- name: "fd | {{ ansible_distribution }} | Install using yay"
+  kewlfft.aur.aur:
+    name: "fd"
+    state: present
+
+- name: "tree-sitter-cli | {{ ansible_distribution }} | Install using yay"
+  kewlfft.aur.aur:
+    name: tree-sitter-cli"
+    state: present
+
