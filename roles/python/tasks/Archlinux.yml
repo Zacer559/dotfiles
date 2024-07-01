@@ -1,0 +1,27 @@
+---
+- name: "Python | {{ ansible_distribution }} | Install Python and packages"
+  ansible.builtin.pacman:
+    name:
+      - python
+      - python-capng
+      - python-defusedxml
+      - python-packaging
+      - python-pip
+      - python-pyqt5
+      - python-pyquery
+      - python-requests
+      - python-watchdog
+    state: present
+  become: true
+
+- name: "Python | {{ ansible_distribution }} | Install anaconda"
+  kewlfft.aur.aur:
+    name: "anaconda"
+    state: present
+
+- name: "Python | {{ ansible_distribution }} | Initialize conda environment and setup zsh"
+  shell: |
+    source /opt/anaconda/bin/activate root
+    conda init zsh
+  args:
+    executable: /bin/bash
