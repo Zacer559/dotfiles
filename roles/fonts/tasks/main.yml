@@ -1,0 +1,38 @@
+- name: "Fonts | {{ ansible_distribution }} | Create necessary directories"
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  become: true
+  loop:
+    - /usr/local/share/fonts
+    - /usr/local/share/fonts/FiraCode-NF
+
+- name: "Fonts | {{ ansible_distribution }} | Download FiraCode Nerd Font zip"
+  ansible.builtin.get_url:
+    url: https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/FiraCode.zip
+    dest: /tmp/FiraCode.zip
+    mode: "0644"
+  become: true
+
+- name: "Fonts | {{ ansible_distribution }} | Unzip FiraCode Nerd Font"
+  ansible.builtin.unarchive:
+    src: /tmp/FiraCode.zip
+    dest: /usr/local/share/fonts/FiraCode-NF
+    remote_src: true
+  become: true
+
+- name: "Fonts | {{ ansible_distribution }} | Refresh font cache"
+  ansible.builtin.command:
+    cmd: fc-cache -fv
+  args:
+    warn: false
+
+- name: "Fonts | {{ ansible_distribution }} | Ensure permissions on font files"
+  ansible.builtin.file:
+    path: /usr/local/share/fonts/FiraCode-NF
+    recurse: true
+    owner: root
+    group: root
+    mode: "0644"
+    become: true

@@ -3,5 +3,6 @@
   ansible.builtin.pacman:
     name:
       - git
+      - lazygit
     state: present
   become: true

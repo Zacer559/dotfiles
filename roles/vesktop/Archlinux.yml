@@ -1,0 +1,5 @@
+---
+- name: "Vesktop | {{ ansible_distribution }} | Install vesktop "
+  kewlfft.aur.aur:
+    name: "vesktop"
+    state: present
