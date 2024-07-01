@@ -5,33 +5,32 @@
     state: present
     update_cache: yes
 
-- name: "Base-devel | {{ ansible_distribution }} | Install using yay"
+- name: "Neovim | {{ ansible_distribution }} | Install base-devel "
   kewlfft.aur.aur:
     name: "base-devel"
     state: present
 
-- name: "ripgrep | {{ ansible_distribution }} | Install using yay"
+- name: "Neovim | {{ ansible_distribution }} | Install ripgrep "
   kewlfft.aur.aur:
     name: "ripgrep"
     state: present
 
-- name: "luarocks | {{ ansible_distribution }} | Install using yay"
+- name: "Neovim | {{ ansible_distribution }} | Install luarocks "
   kewlfft.aur.aur:
     name: "luarocks"
     state: present
 
-- name: "lua51 | {{ ansible_distribution }} | Install using yay"
+- name: "Neovim | {{ ansible_distribution }} | Install lua51 "
   kewlfft.aur.aur:
     name: "lua51"
     state: present
 
-- name: "fd | {{ ansible_distribution }} | Install using yay"
+- name: "Neovim | {{ ansible_distribution }} | Install fd "
   kewlfft.aur.aur:
     name: "fd"
     state: present
 
-- name: "tree-sitter-cli | {{ ansible_distribution }} | Install using yay"
+- name: "Neovim | {{ ansible_distribution }} | Install tree-sitter-cli "
   kewlfft.aur.aur:
     name: tree-sitter-cli"
     state: present
-

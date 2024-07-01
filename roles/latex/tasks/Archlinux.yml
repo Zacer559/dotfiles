@@ -1,0 +1,17 @@
+---
+- name: "Latex | {{ ansible_distribution }} | Install latex-mk "
+  kewlfft.aur.aur:
+    name: "latex-mk"
+    state: present
+- name: "Latex | {{ ansible_distribution }} | Install latexrun-git"
+  kewlfft.aur.aur:
+    name: "latexrun-git"
+    state: present
+- name: "Latex | {{ ansible_distribution }} | Install zathura "
+  kewlfft.aur.aur:
+    name: "zathura"
+    state: present
+- name: "Latex | {{ ansible_distribution }} | Install zathura-pdf-poppler "
+  kewlfft.aur.aur:
+    name: "zathura-pdf-poppler"
+    state: present
