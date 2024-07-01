@@ -8,6 +8,7 @@ default_roles:
   - brave
   - vesktop
   - fonts
+  - whatsapp
 
 git_user_name: "Zacer559"
 git_user_email: !vault |
