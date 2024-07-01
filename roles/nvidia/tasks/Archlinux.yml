@@ -9,3 +9,27 @@
       - nvidia-container-toolkit
       - nvidia-settings
     state: present
+
+- name: "Nvidia | {{ ansible_distribution }} | Check if nvidia.conf exists in /etc/modprobe.d/"
+  ansible.builtin.stat:
+    path: "/etc/modprobe.d/nvidia.conf"
+  register: nvidia_conf_stat
+  become: true
+
+- name: "Nvidia | {{ ansible_distribution }} | Remove existing nvidia.conf if it is not a symlink"
+  ansible.builtin.file:
+    path: "/etc/modprobe.d/nvidia.conf"
+    state: absent
+  when: not nvidia_conf_stat.stat.islnk
+  become: true
+
+- name: "Nvidia | {{ ansible_distribution }} | Create symlink for nvidia.conf"
+  ansible.builtin.file:
+    src: "{{ role_path }}/files/nvidia.conf"
+    dest: "/etc/modprobe.d/nvidia.conf"
+    state: link
+    force: true
+    mode: "0644"
+    owner: "root"
+    group: "root"
+  become: true
