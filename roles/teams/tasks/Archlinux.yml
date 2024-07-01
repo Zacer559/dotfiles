@@ -1,0 +1,5 @@
+---
+- name: "Microsoft Teams | {{ ansible_distribution }} | Install teams-for-linux"
+  kewlfft.aur.aur:
+    name: "teams-for-linux"
+    state: present

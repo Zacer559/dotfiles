@@ -11,6 +11,7 @@ default_roles:
   - whatsapp
   - kitty
   - nvidia
+  - teams
 git_user_name: "Zacer559"
 git_user_email: !vault |
   $ANSIBLE_VAULT;1.1;AES256
