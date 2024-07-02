@@ -15,6 +15,7 @@ default_roles:
   - python
   - xpipe
   - veracrypt
+  - vmware
 
 # Github
 git_user_name: "Zacer559"

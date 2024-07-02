@@ -1,0 +1,9 @@
+---
+- name: "VMware | {{ ansible_distribution }} | Install vmware-workstation"
+  kewlfft.aur.aur:
+    name: "vmware-workstation"
+    state: present
+- name: "VMware | {{ ansible_distribution }} | Install oprn-vm-tools"
+  kewlfft.aur.aur:
+    name: "open-vm-tools"
+    state: present

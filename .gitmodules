@@ -4,3 +4,6 @@
 [submodule "roles/hyprland/files"]
 	path = roles/hyprland/files
 	url = https://github.com/Zacer559/hyprConfig
+[submodule "roles/vmware/files/config"]
+	path = roles/vmware/files/config
+	url = https://github.com/Zacer559/vmware_config
