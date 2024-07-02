@@ -15,7 +15,7 @@
 
 - name: "VMware | Remove existing /etc/vmware/ if not a symlink"
   ansible.builtin.file:
-    path: "/etc/vmware/"
+    path: "/etc/vmware"
     state: absent
   when: vmware_etc_stat.stat.exists and not vmware_etc_stat.stat.islnk
   become: true
@@ -44,34 +44,34 @@
     owner: "root"
     group: "root"
   become: true
-- name: "VMware | Set permissions for individual files in /etc/vmware"
-  ansible.builtin.file:
-    path: "/etc/vmware/{{ item.path }}"
-    mode: "{{ item.mode }}"
-    owner: "root"
-    group: "root"
-  with_items:
-    - { path: "bootstrap", mode: "0644" }
-    - { path: "config", mode: "0644" }
-    - { path: "icu", mode: "0777" }
-    - { path: "netmap.conf", mode: "0666" }
-    - { path: "networking", mode: "0644" }
-    - { path: "usbarb.rules", mode: "0640" }
-    - { path: "vmnet1", mode: "0755" }
-    - { path: "vmnet8", mode: "0755" }
-  become: true
-
+# - name: "VMware | Set permissions for individual files in /etc/vmware"
+#   ansible.builtin.file:
+#     path: "/etc/vmware/{{ item.path }}"
+#     mode: "{{ item.mode }}"
+#     owner: "root"
+#     group: "root"
+#   with_items:
+#     - { path: "bootstrap", mode: "0644" }
+#     - { path: "config", mode: "0644" }
+#     - { path: "icu", mode: "0777" }
+#     - { path: "netmap.conf", mode: "0666" }
+#     - { path: "networking", mode: "0644" }
+#     - { path: "usbarb.rules", mode: "0640" }
+#     - { path: "vmnet1", mode: "0755" }
+#     - { path: "vmnet8", mode: "0755" }
+#   become: true
+#
 - name: "VMware | Check if config folder is a symlink"
   ansible.builtin.stat:
-    path: "{{ ansible_user_dir }}/.vmware/"
+    path: "{{ ansible_user_dir }}/.vmware"
   register: vmware_config_stat
 
 - name: "VMware | Remove existing config folder if not a symlink"
   ansible.builtin.file:
-    path: "{{ ansible_user_dir }}/.vmware/"
+    path: "{{ ansible_user_dir }}/.vmware"
     state: absent
   when: vmware_config_stat.stat.exists and not vmware_config_stat.stat.islnk
-
+  become: true
 - name: "VMware | Config folder"
   ansible.builtin.file:
     mode: "0755"
@@ -81,7 +81,7 @@
 - name: "VMware | Create symlink to role files/config directory"
   ansible.builtin.file:
     src: "{{ role_path }}/files/config"
-    dest: "{{ ansible_user_dir }}/.vmware/"
+    dest: "{{ ansible_user_dir }}/.vmware"
     state: link
     force: true
 
@@ -93,14 +93,14 @@
     mode: "0755"
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
-
-- name: "VMware | Set permissions for individual files in .vmware"
-  ansible.builtin.file:
-    path: "{{ ansible_user_dir }}/.vmware/{{ item.path }}"
-    mode: "{{ item.mode }}"
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
-  with_items:
-    - { path: "inventory.vmls", mode: "0754" }
-    - { path: "preferences", mode: "0600" }
-    - { path: "shortcuts", mode: "0644" }
+#
+# - name: "VMware | Set permissions for individual files in .vmware"
+#   ansible.builtin.file:
+#     path: "{{ ansible_user_dir }}/.vmware/{{ item.path }}"
+#     mode: "{{ item.mode }}"
+#     owner: "{{ ansible_user }}"
+#     group: "{{ ansible_user }}"
+#   with_items:
+#     - { path: "inventory.vmls", mode: "0754" }
+#     - { path: "preferences", mode: "0600" }
+#     - { path: "shortcuts", mode: "0644" }
