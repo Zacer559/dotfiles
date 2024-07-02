@@ -1,0 +1,46 @@
+---
+- name: "Veracrypt | Run Tasks: {{ ansible_distribution }}"
+  ansible.builtin.include_tasks: "{{ ansible_distribution }}.yml"
+
+- name: "Configure sudoers to allow veracrypt without a password"
+  become: true
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers.d/veracrypt
+    state: present
+    create: true
+    line: "{{ ansible_env.USER }} ALL=(ALL) NOPASSWD: /usr/bin/veracrypt"
+    validate: "visudo -cf %s"
+
+- name: "Veracrypt | Set variables for Veracrypt mount"
+  set_fact:
+    vault_secret_path: "{{ lookup('env', 'HOME') }}/.ansible-vault/vault.secret"
+    veracrypt_pim: "{{ veracrypt_pim }}"
+    user_id: "{{ lookup('pipe', 'id -u') }}"
+    group_id: "{{ lookup('pipe', 'id -g') }}"
+
+- name: "Veracrypt | Read password from file"
+  ansible.builtin.slurp:
+    src: "{{ vault_secret_path }}"
+  register: vault_secret_content
+
+- name: "Veracrypt | Create user systemd service for mounting Veracrypt volume"
+  ansible.builtin.template:
+    src: veracrypt-mount.service.j2
+    dest: "{{ lookup('env', 'HOME') }}/.config/systemd/user/veracrypt-mount.service"
+  vars:
+    password: "{{ vault_secret_content['content'] | b64decode | trim }}"
+
+- name: "Veracrypt | Reload user systemd daemon"
+  ansible.builtin.command:
+    cmd: systemctl --user daemon-reload
+  become: false
+
+- name: "Veracrypt | Enable user Veracrypt mount service"
+  ansible.builtin.command:
+    cmd: systemctl --user enable veracrypt-mount.service
+  become: false
+
+- name: "Veracrypt | Start user Veracrypt mount service"
+  ansible.builtin.command:
+    cmd: systemctl --user start veracrypt-mount.service
+  become: false

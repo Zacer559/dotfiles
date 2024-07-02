@@ -1,0 +1,7 @@
+---
+- name: "Veracrypt | {{ ansible_distribution }} | Install veracrypt"
+  become: true
+  ansible.builtin.pacman:
+    name:
+      - veracrypt
+    state: present

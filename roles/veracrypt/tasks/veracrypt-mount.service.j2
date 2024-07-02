@@ -1,0 +1,13 @@
+
+[Unit]
+Description=Mount VeraCrypt Volume
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=sudo /usr/bin/veracrypt --text --mount /dev/md126p2 /mnt/veracrypt1 --keyfiles="" --pim {{ veracrypt_pim }} --password {{ password }} --protect-hidden=no 
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+
