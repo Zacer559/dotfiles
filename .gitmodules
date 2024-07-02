@@ -6,4 +6,7 @@
 	url = https://github.com/Zacer559/hyprConfig
 [submodule "roles/vmware/files/config"]
 	path = roles/vmware/files/config
-	url = https://github.com/Zacer559/vmware_config
+  url = https://github.com/Zacer559/vmware_config
+[submodule "roles/xpipe/files"]
+  path = roles/xpipe/files
+  url = https://github.com/Zacer559/xpipe_config
