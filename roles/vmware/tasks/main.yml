@@ -87,13 +87,11 @@
 
 - name: "VMware | Set permissions and ownership for .vmware contents"
   ansible.builtin.file:
-    path: "{{ ansible_user_dir }}/.vmware/"
+    path: "{{ ansible_user_dir }}/.vmware"
     state: directory
     recurse: true
     mode: "0755"
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
-#
+  become: true
 # - name: "VMware | Set permissions for individual files in .vmware"
 #   ansible.builtin.file:
 #     path: "{{ ansible_user_dir }}/.vmware/{{ item.path }}"

@@ -1,20 +1,20 @@
 default_roles:
   # - alacritty
-  - git
-  - neovim
-  - ssh
-  - latex
-  - hyprland
-  - brave
-  - vesktop
-  - fonts
-  - whatsapp
-  - kitty
-  - nvidia
-  - teams
-  - python
-  - xpipe
-  - veracrypt
+  # - git
+  # - neovim
+  # - ssh
+  # - latex
+  # - hyprland
+  # - brave
+  # - vesktop
+  # - fonts
+  # - whatsapp
+  # - kitty
+  # - nvidia
+  # - teams
+  # - python
+  # - xpipe
+  # - veracrypt
   - vmware
 
 # Github
