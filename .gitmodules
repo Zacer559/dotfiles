@@ -4,6 +4,3 @@
 [submodule "roles/hyprland/files"]
 	path = roles/hyprland/files
 	url = https://github.com/Zacer559/hyprConfig
-[submodule ".dotfiles/roles/hyprland/files"]
-	path = .dotfiles/roles/hyprland/files
-	url = https://github.com/Zacer559/hyprConfig

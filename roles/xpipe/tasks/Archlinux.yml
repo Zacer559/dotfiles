@@ -1,0 +1,5 @@
+---
+- name: "Xpipe | {{ ansible_distribution }} | Install xpipe"
+  kewlfft.aur.aur:
+    name: "xpipe"
+    state: present
