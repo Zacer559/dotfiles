@@ -61,6 +61,13 @@
 #     - { path: "vmnet8", mode: "0755" }
 #   become: true
 #
+- name: "Create symlink for icu"
+  ansible.builtin.file:
+    src: "/usr/lib/vmware/icu"
+    dest: "/etc/vmware/icu"
+    state: link
+  become: true
+
 - name: "VMware | Check if config folder is a symlink"
   ansible.builtin.stat:
     path: "{{ ansible_user_dir }}/.vmware"
