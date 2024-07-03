@@ -67,3 +67,8 @@
     dest: "{{ ansible_user_dir }}/.git-credentials"
     content: "https://{{ git_user_name }}:{{ git_token }}@github.com"
   no_log: true
+
+- name: "Git | Download submodules"
+  ansible.builtin.command: "git submodule update --init --recursive"
+  args:
+    chdir: "{{ ansible_user_dir }}/.dotfiles"
