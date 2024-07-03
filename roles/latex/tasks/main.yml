@@ -1,3 +1,27 @@
 ---
 - name: "Latex  | Run Tasks: {{ ansible_distribution }}"
   ansible.builtin.include_tasks: "{{ ansible_distribution }}.yml"
+
+- name: "Latex | Check if zathurarc file is a symlink"
+  ansible.builtin.stat:
+    path: "{{ ansible_user_dir }}/.config/zathura/zathurarc"
+  register: zathura_config_stat
+
+- name: "Latex | Remove existing zathurarc if not a symlink"
+  ansible.builtin.file:
+    path: "{{ ansible_user_dir }}/.config/zathura/zathurarc"
+    state: absent
+  when: not zathura_config_stat.stat.islnk
+
+- name: "Latex | Ensure configuration directory exists"
+  ansible.builtin.file:
+    path: "{{ ansible_user_dir }}/.config/zathura"
+    state: directory
+    mode: "0755"
+
+- name: "Latex | Create symlink for zathurarc"
+  ansible.builtin.file:
+    src: "{{ role_path }}/files/zathurarc"
+    dest: "{{ ansible_user_dir }}/.config/zathura/zathurarc"
+    state: link
+    force: true

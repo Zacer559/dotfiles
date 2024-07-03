@@ -23,5 +23,7 @@
   shell: |
     source /opt/anaconda/bin/activate root
     conda init zsh
+    echo 'export CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt' >> ~/.zshrc
+    echo 'export CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt' >> ~/.bashrc
   args:
     executable: /bin/bash
