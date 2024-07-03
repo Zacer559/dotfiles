@@ -2,10 +2,13 @@
 # Zathura configuration file
 
 # Set the default key binding for copy to Ctrl+Shift+C
-map <Primary><Shift>c copy
-
+map <Primary><Shift>c !wl-copy
 # Other example configurations (you can customize these as needed)
+# copy selection to system clipboard
+set selection-clipboard clipboard
 
+# enable incremental search
+set incremental-search true
 # Set the default zoom level to 100%
 set zoom-level 1.0
 
