@@ -14,16 +14,6 @@ set zoom-level 1.0
 
 # Enable smooth scrolling
 set smooth-scroll true
-
-# Set the recolor mode (useful for reading in the dark)
-set recolor true
-
-# Set the recolor light color (text color in recolor mode)
-set recolor-lightcolor "#FFFFFF"
-
-# Set the recolor dark color (background color in recolor mode)
-set recolor-darkcolor "#000000"
-
 # Enable continuous view mode
 set continuous true
 
