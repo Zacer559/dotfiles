@@ -1,7 +1,7 @@
 ---
 - name: "Latex | {{ ansible_distribution }} | Install latex-mk "
   kewlfft.aur.aur:
-    name: "latex-mk"
+    name: "texlive-binextra"
     state: present
 - name: "Latex | {{ ansible_distribution }} | Install latexrun-git"
   kewlfft.aur.aur:

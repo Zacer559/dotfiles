@@ -17,7 +17,7 @@
   ansible.builtin.file:
     path: "{{ ansible_user_dir }}/.xpipe/settings"
     state: absent
-  when: not xpipe_config_stat.stat.islnk
+  when: xpipe_config_stat.stat.exists and not xpipe_config_stat.stat.islnk
 
 - name: "Xpipe | Config folder"
   ansible.builtin.file:

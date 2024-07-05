@@ -5,6 +5,6 @@
     state: present
 
 - name: "Java | {{ ansible_distribution }} | Install maven"
-  ansible.builtin.pacman:
+  kewlfft.aur.aur:
     name: "maven"
     state: present

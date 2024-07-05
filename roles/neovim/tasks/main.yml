@@ -17,7 +17,7 @@
   ansible.builtin.file:
     path: "{{ ansible_user_dir }}/.config/nvim"
     state: absent
-  when: not neovim_config_stat.stat.islnk
+  when: neovim_config_stat.stat.exists and not neovim_config_stat.stat.islnk
 
 - name: "Neovim | Config folder"
   ansible.builtin.file:
