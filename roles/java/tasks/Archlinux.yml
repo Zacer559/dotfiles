@@ -1,0 +1,10 @@
+---
+- name: "Java | {{ ansible_distribution }} | Install jdk"
+  kewlfft.aur.aur:
+    name: "jdk"
+    state: present
+
+- name: "Java | {{ ansible_distribution }} | Install maven"
+  ansible.builtin.pacman:
+    name: "maven"
+    state: present

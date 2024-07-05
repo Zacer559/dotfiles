@@ -1,33 +1,6 @@
 
 # Zathura configuration file
-
-# Set the default key binding for copy to Ctrl+Shift+C
-map <Primary><Shift>c !wl-copy
-# Other example configurations (you can customize these as needed)
 # copy selection to system clipboard
 set selection-clipboard clipboard
 
-# enable incremental search
-set incremental-search true
-# Set the default zoom level to 100%
-set zoom-level 1.0
-
-# Enable smooth scrolling
-set smooth-scroll true
-# Enable continuous view mode
-set continuous true
-
-# Show the index of the document
-set show-index true
-
-# Set the default search case sensitivity
-set search-case sensitive
-
-# Set the default scroll step
-set scroll-step 40
-
-# Enable synctex support for LaTeX
 set synctex true
-
-# Set the default page layout to single page
-set page-layout single

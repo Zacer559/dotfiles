@@ -15,7 +15,8 @@ default_roles:
   - xpipe
   - veracrypt
   - vmware
-
+  - java
+  - waybar
 # Github
 git_user_name: "Zacer559"
 git_user_email: !vault |
