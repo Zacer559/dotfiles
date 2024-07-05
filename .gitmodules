@@ -8,6 +8,6 @@
 	path = roles/vmware/files/config
         url = https://github.com/Zacer559/vmware_config
 
-[submodule "roles/xpipe/roles/xpipe/files"]
-	path = roles/xpipe/roles/xpipe/files
+[submodule "roles/xpipe/files"]
+	path = roles/xpipe/files
 	url = https://github.com/Zacer559/xpipe_config
