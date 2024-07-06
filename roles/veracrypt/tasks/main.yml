@@ -44,3 +44,7 @@
   ansible.builtin.command:
     cmd: systemctl --user start veracrypt-mount.service
   become: false
+- name: "Enable lingering for user to allow user services to run at boot"
+  ansible.builtin.command:
+    cmd: loginctl enable-linger {{ ansible_env.USER }}
+  become: true
