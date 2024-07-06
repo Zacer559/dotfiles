@@ -66,6 +66,7 @@ function _cmd {
     touch $DOTFILES_LOG
   fi
   # empty conduro.log
+
   >$DOTFILES_LOG
   # hide stdout, on error we print and exit
   if eval "$1" 1>/dev/null 2>$DOTFILES_LOG; then

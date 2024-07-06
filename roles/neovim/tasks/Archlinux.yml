@@ -64,3 +64,9 @@
   kewlfft.aur.aur:
     name: "xdotool"
     state: present
+
+- name: "Neovim | {{ ansible_distribution }} | Install yarn "
+  ansible.builtin.pacman:
+    name: yarn
+    state: present
+  become: true
