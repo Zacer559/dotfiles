@@ -1,0 +1,7 @@
+---
+- name: "Steam | {{ ansible_distribution }} | Install steam with pacman"
+  become: true
+  ansible.builtin.pacman:
+    name:
+      - steam
+    state: present
