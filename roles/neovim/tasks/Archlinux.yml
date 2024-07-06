@@ -49,3 +49,18 @@
   kewlfft.aur.aur:
     name: "npm"
     state: present
+
+- name: "Neovim | {{ ansible_distribution }} | Install tree-sitter-cli "
+  kewlfft.aur.aur:
+    name: "tree-sitter"
+    state: present
+
+- name: "Neovim | {{ ansible_distribution }} | Install biber "
+  kewlfft.aur.aur:
+    name: "biber"
+    state: present
+
+- name: "Neovim | {{ ansible_distribution }} | Install xdotool "
+  kewlfft.aur.aur:
+    name: "xdotool"
+    state: present
