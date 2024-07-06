@@ -25,5 +25,17 @@
     conda init zsh
     echo 'export CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt' >> ~/.zshrc
     echo 'export CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt' >> ~/.bashrc
+    echo 'export CRYPTOGRAPHY_OPENSSL_NO_LEGACY=1' >> ~/.zshrc
+    echo 'export CRYPTOGRAPHY_OPENSSL_NO_LEGACY=1' >> ~/.bashrc
+
   args:
     executable: /bin/bash
+
+- name: "Python | {{ ansible_distribution }} | Install pyinstaller in conda environment"
+  shell: |
+    export CRYPTOGRAPHY_OPENSSL_NO_LEGACY=1
+    source /opt/anaconda/bin/activate root
+    conda install -y pyinstaller
+  args:
+    executable: /bin/bash
+  become: true
