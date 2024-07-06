@@ -1,0 +1,5 @@
+---
+- name: "Docker | {{ ansible_distribution }} | Install docker-desktop"
+  kewlfft.aur.aur:
+    name: "docker-desktop"
+    state: present
