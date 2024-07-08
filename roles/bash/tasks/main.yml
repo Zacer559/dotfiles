@@ -1,0 +1,14 @@
+---
+- name: "Add .dotfiles/bin to PATH in .zshrc"
+  ansible.builtin.lineinfile:
+    path: ~/.zshrc
+    regexp: "(^|:|^)~/.dotfiles/bin($|:)"
+    line: 'export PATH="$PATH:$HOME/.dotfiles/bin"'
+    create: true
+
+- name: "Add .dotfiles/bin to PATH in .bashrc"
+  ansible.builtin.lineinfile:
+    path: ~/.bashrc
+    regexp: "(^|:|^)~/.dotfiles/bin($|:)"
+    line: 'export PATH="$PATH:$HOME/.dotfiles/bin"'
+    create: true

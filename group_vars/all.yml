@@ -1,5 +1,6 @@
 default_roles:
   - git
+  - bash
   - neovim
   - ssh
   - latex
@@ -19,7 +20,7 @@ default_roles:
   - waybar
   - docker
   - steam
-
+  - mpv
 # Github
 git_user_name: "Zacer559"
 git_user_email: !vault |
