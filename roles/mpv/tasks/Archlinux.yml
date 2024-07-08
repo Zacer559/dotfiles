@@ -1,0 +1,6 @@
+---
+- name: "MPV(video) | {{ ansible_distribution }} | Install mpv"
+  ansible.builtin.pacman:
+    name: "mpv"
+    state: present
+  become: true
