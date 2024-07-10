@@ -207,8 +207,11 @@
 "group/mobo_drawer": {
 	"orientation": "inherit",
 	"modules": [
-		"temperature",		
-		"cpu",	
+		"temperature",
+
+    "cpu",	
+		"custom/gpu_temperature",
+    "custom/gpu_load",  
 		"memory",
 		"disk",
    	]
@@ -382,7 +385,8 @@
 	"format": "{percentage_used}% 󰋊",
 	//"tooltip": true,
 	"tooltip-format": "{used} used out of {total} on {path} ({percentage_used}%)",
-},
+  "on-click": "thunar"
+  },
 "hyprland/language": {
 	"format": "Lang: {}",
 	"format-en": "US",
@@ -428,8 +432,8 @@
 },
 "memory": {
 	"interval": 10,
-	"format": "{used:0.1f}G 󰾆",
-	"format-alt": "{percentage}% 󰾆",
+	"format": "{used:0.1f}G ",
+	"format-alt": "{percentage}% ",
 	"format-alt-click": "click",
 	"tooltip": true,
 	"tooltip-format": "{used:0.1f}GB/{total:0.1f}G",
@@ -790,8 +794,8 @@
 },
 "memory#vertical": {
 	"interval": 10,
-	"format": "󰾆\n{percentage}%",
-	"format-alt": "󰾆\n{used:0.1f}G",
+	"format": "\n{percentage}%",
+	"format-alt": "\n{used:0.1f}G",
 	"format-alt-click": "click",
 	"tooltip": true,
 	"tooltip-format": "{used:0.1f}GB/{total:0.1f}G",
@@ -867,4 +871,17 @@
     "format": "⚡{}",
     "tooltip": false
 },
+"custom/gpu_temperature": {
+    "exec": "~/.config/hypr/UserScripts/GPU_temp.sh",
+    "interval": 10,
+    "format": "{}°C 󰈸",
+    "tooltip": false,
+  },
+"custom/gpu_load": {
+    "exec": "~/.config/hypr/UserScripts/GPU_load.sh",
+    "interval": 1,
+    "format": "{}% 󰾆 ",
+    "tooltip": false,
+  },
+
 }
