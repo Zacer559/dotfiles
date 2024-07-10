@@ -20,7 +20,7 @@
     state: present
 
 - name: "Python | {{ ansible_distribution }} | Initialize conda environment and setup zsh"
-  shell: |
+  ansible.builtin.shell: |
     source /opt/anaconda/bin/activate root
     conda init zsh
   args:
@@ -46,16 +46,14 @@
     regexp: "^export CRYPTOGRAPHY_OPENSSL_NO_LEGACY="
     line: "export CRYPTOGRAPHY_OPENSSL_NO_LEGACY=1"
     create: true
-
 - name: "Ensure CRYPTOGRAPHY_OPENSSL_NO_LEGACY is set in .bashrc"
   ansible.builtin.lineinfile:
     path: ~/.bashrc
     regexp: "^export CRYPTOGRAPHY_OPENSSL_NO_LEGACY="
     line: "export CRYPTOGRAPHY_OPENSSL_NO_LEGACY=1"
     create: true
-
 - name: "Python | {{ ansible_distribution }} | Install pyinstaller in conda environment"
-  shell: |
+  ansible.builtin.shell: |
     source /opt/anaconda/bin/activate root
     conda install -y pyinstaller
   args:
