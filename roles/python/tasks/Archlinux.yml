@@ -55,6 +55,23 @@
 - name: "Python | {{ ansible_distribution }} | Install pyinstaller in conda environment"
   ansible.builtin.shell: |
     source /opt/anaconda/bin/activate root
+    export CRYPTOGRAPHY_OPENSSL_NO_LEGACY=1
     conda install -y pyinstaller
+  args:
+    executable: /bin/bash
+  become: true
+
+- name: "Create conda environment for Neovim Python provider"
+  ansible.builtin.shell: |
+    source /opt/anaconda/bin/activate root
+    conda create --name nvim-python python=3.12 -y
+  args:
+    executable: /bin/bash
+
+- name: "Activate nvim-python environment and install pip and pynvim"
+  ansible.builtin.shell: |
+    source /opt/anaconda/bin/activate nvim-python
+    conda install pip -y
+    pip install pynvim
   args:
     executable: /bin/bash
