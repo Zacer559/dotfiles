@@ -1,0 +1,6 @@
+---
+- name: "Gimp | {{ ansible_distribution }} | Install gimp"
+  ansible.builtin.pacman:
+    name: "gimp"
+    state: present
+  become: true

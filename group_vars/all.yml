@@ -21,6 +21,7 @@ default_roles:
   - docker
   - steam
   - mpv
+  - gimp
 # Github
 git_user_name: "Zacer559"
 git_user_email: !vault |
