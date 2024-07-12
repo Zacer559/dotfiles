@@ -40,7 +40,7 @@
     path: "/etc/vmware/"
     state: directory
     recurse: true
-    mode: "0644"
+    mode: "0755"
     owner: "root"
     group: "root"
   become: true
