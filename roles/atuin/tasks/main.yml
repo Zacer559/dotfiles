@@ -1,0 +1,14 @@
+---
+- name: "Atuin  | Run Tasks: {{ ansible_distribution }}"
+  ansible.builtin.include_tasks: "{{ ansible_distribution }}.yml"
+
+- name: Atuin  | Ensure 'eval "$(atuin init zsh)"' is in ~/.zshrc
+  lineinfile:
+    path: ~/.zshrc
+    line: 'eval "$(atuin init zsh)"'
+    insertafter: EOF
+    state: present
+
+- name: Atuin   | Login with Atuin using shell command
+  shell: |
+    atuin login -u "{{ atuin_username }}" -p "{{ atuin_password }}" -k "{{ atuin_key }}"
