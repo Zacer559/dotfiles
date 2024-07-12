@@ -883,5 +883,13 @@
     "format": "{}% 󰾆 ",
     "tooltip": false,
   },
+  "custom/veracrypt": {
+    "exec": "~/.config/hypr/UserScripts/Veracrypt_status.sh",
+    "interval": 10,
+    "format": "{}",
+    "tooltip": true,
+    "tooltip-format": "Click to toggle VeraCrypt mount",
+    "on-click": "~/.config/hypr/UserScripts/Veracrypt_toggle.sh"
+  },
 
 }

@@ -25,6 +25,7 @@
 	"custom/separator#blank",
 	"custom/separator#line",
 	"custom/weather",
+  "custom/veracrypt",
 	],
 
 "modules-center": [
