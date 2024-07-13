@@ -70,3 +70,9 @@
     name: yarn
     state: present
   become: true
+
+- name: "Neovim | {{ ansible_distribution }} | Install imagemagick "
+  ansible.builtin.pacman:
+    name: imagemagick
+    state: present
+  become: true

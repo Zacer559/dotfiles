@@ -13,6 +13,13 @@
       - python-watchdog
     state: present
   become: true
+- name: "Python | {{ ansible_distribution }} | Install quarto and jupytext"
+  kewlfft.aur.aur:
+    name:
+      - quarto-cli-bin
+      - python-jupytext
+    state: present
+  become: true
 
 - name: "Python | {{ ansible_distribution }} | Install anaconda"
   kewlfft.aur.aur:
@@ -72,6 +79,6 @@
   ansible.builtin.shell: |
     source /opt/anaconda/bin/activate nvim-python
     conda install pip -y
-    pip install pynvim
+    pip install pynvim pandas matplotlib keras_tuner tensorflow scikit-learn numpy pyyaml jsonschema-specifications rpds-py nbformat fastjsonschema jsonschema attrs referencing jupytext
   args:
     executable: /bin/bash
