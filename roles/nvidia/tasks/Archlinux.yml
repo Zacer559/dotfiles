@@ -33,3 +33,47 @@
     owner: "root"
     group: "root"
   become: true
+
+- name: "Nvidia | {{ ansible_distribution }} | Install python-pynvml"
+  kewlfft.aur.aur:
+    name: "python-pynvml"
+    state: present
+  become: true
+
+- name: "Nvidia | {{ ansible_distribution }} | Copy gpu_fan_control.py to /usr/local/bin"
+  become: true
+  ansible.builtin.copy:
+    src: "{{ role_path }}/files/gpu_fan_control.py"
+    dest: /usr/local/bin/gpu_fan_control.py
+    mode: "0755"
+    owner: "root"
+    group: "root"
+
+- name: "Nvidia | {{ ansible_distribution }} | Create systemd service file for GPU Fan Control"
+  become: true
+  ansible.builtin.template:
+    src: "{{ role_path }}/files/gpu_fan_control.service.j2"
+    dest: /etc/systemd/system/gpu_fan_control.service
+    mode: "0644"
+    owner: "root"
+    group: "root"
+  vars:
+    gpu_name: "3080"
+    min_temp: 30
+    min_speed: 10
+    max_temp: 85
+    max_speed: 100
+    interval: 1
+    log_file: "/var/tmp/gpu_fan_speed.log"
+
+- name: "Nvidia | {{ ansible_distribution }} | Reload systemd daemon"
+  become: true
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: "Nvidia | {{ ansible_distribution }} | Enable and start GPU Fan Control service"
+  become: true
+  ansible.builtin.systemd:
+    name: gpu_fan_control.service
+    enabled: true
+    state: started
