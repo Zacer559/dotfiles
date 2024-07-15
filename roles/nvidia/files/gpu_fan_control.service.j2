@@ -4,7 +4,7 @@ Description=GPU Fan Control Service
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/python3 /usr/local/bin/gpu_fan_control.py --gpu_name "{{ gpu_name }}" --min_temp {{ min_temp }} --min_speed {{ min_speed }} --max_temp {{ max_temp }} --max_speed {{ max_speed }} --interval {{ interval }} --log_file "{{ log_file }}"
+ExecStart=/home/zacer/.conda/envs/nvim-python/bin/python /usr/local/bin/gpu_fan_control.py --gpu_name "{{ gpu_name }}" --min_temp {{ min_temp }} --min_speed {{ min_speed }} --max_temp {{ max_temp }} --max_speed {{ max_speed }} --interval {{ interval }} --log_file "{{ log_file }}"
 Restart=always
 User=root
 

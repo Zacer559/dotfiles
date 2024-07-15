@@ -34,12 +34,6 @@
     group: "root"
   become: true
 
-- name: "Nvidia | {{ ansible_distribution }} | Install python-pynvml"
-  kewlfft.aur.aur:
-    name: "python-pynvml"
-    state: present
-  become: true
-
 - name: "Nvidia | {{ ansible_distribution }} | Copy gpu_fan_control.py to /usr/local/bin"
   become: true
   ansible.builtin.copy:
@@ -77,3 +71,4 @@
     name: gpu_fan_control.service
     enabled: true
     state: started
+
