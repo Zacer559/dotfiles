@@ -1,0 +1,34 @@
+- name: "Fan Control | Check if /etc/fancontrol is a symlink"
+  ansible.builtin.stat:
+    path: "/etc/fancontrol"
+  register: fancontrol_config_stat
+
+- name: "Fan Control | Remove existing /etc/fancontrol if not a symlink"
+  ansible.builtin.file:
+    path: "/etc/fancontrol"
+    state: absent
+  when: fancontrol_config_stat.stat.exists and not fancontrol_config_stat.stat.islnk
+
+- name: "Fan Control | Create symlink to role files directory"
+  ansible.builtin.file:
+    src: "{{ role_path }}/files/fancontrol"
+    dest: "/etc/fancontrol"
+    state: link
+    force: true
+
+- name: "Fan Control | Set correct permissions for /etc/fancontrol"
+  ansible.builtin.file:
+    path: "/etc/fancontrol"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+
+- name: "Fan Control | Enable fancontrol service"
+  ansible.builtin.systemd:
+    name: fancontrol
+    enabled: true
+
+- name: "Fan Control | Start fancontrol service"
+  ansible.builtin.systemd:
+    name: fancontrol
+    state: started
