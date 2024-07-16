@@ -122,6 +122,29 @@ Run the installation script:
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/Zacer559/dotfiles/main/bin/dotfiles)"
 ```
 
+### Script Usage
+
+The `dotfiles` script supports several arguments to customize its behavior. Below are the available options:
+
+```
+Usage: ./dotfiles [-r role1,role2,...] [--roles role1,role2,...] [-h] [--help]
+
+Options:
+  -r, --roles    Specify the roles to run, separated by commas
+  -h, --help     Display this help message
+```
+
+#### Examples
+
+1. Run the script with specified roles:
+   ```sh
+   ./dotfiles -r role1,role2
+   ```
+
+2. Display help message:
+   ```sh
+   ./dotfiles -h
+   ```
 
 ### Update
 
@@ -150,4 +173,3 @@ This project is licensed under the MIT License.
 ---
 
 Enjoy your customized development environment! If you have any questions or need further assistance, please don't hesitate to reach out.
-
