@@ -1,0 +1,35 @@
+---
+- name: "Timeshift | {{ ansible_distribution }} | Install Timeshift"
+  ansible.builtin.pacman:
+    name: "timeshift"
+    state: present
+  become: true
+
+- name: "Timeshift | {{ ansible_distribution }} | Install Xorg-xhost"
+  ansible.builtin.pacman:
+    name:
+      - "xorg-xhost"
+    state: present
+  become: true
+
+- name: "Timeshift | {{ ansible_distribution }} | Install Timeshift-Autosnap"
+  kewlfft.aur.aur:
+    name:
+      - "timeshift-autosnap"
+    state: present
+
+- name: "Grub-Btrfs | {{ ansible_distribution }} | Install Grub-Btrfs and Inotify-Tools"
+  ansible.builtin.pacman:
+    name:
+      - "grub-btrfs"
+      - "inotify-tools"
+    state: present
+  become: true
+
+# Enable Cronie Service (Required for Timeshift-Autosnap)
+- name: "Cronie | {{ ansible_distribution }} | Enable Cronie Service"
+  ansible.builtin.systemd:
+    name: "cronie.service"
+    enabled: true
+    state: started
+  become: true

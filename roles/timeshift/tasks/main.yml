@@ -1,0 +1,74 @@
+---
+# Include Tasks
+- name: "Timeshift    | Run Tasks: {{ ansible_distribution }}"
+  ansible.builtin.include_tasks: "{{ ansible_distribution }}.yml"
+
+# Configure Sudoers for Timeshift
+- name: "Configure sudoers to allow timeshift without a password"
+  become: true
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers.d/timeshift
+    state: present
+    create: true
+    line: "{{ ansible_env.USER }} ALL=(ALL) NOPASSWD: /usr/bin/timeshift"
+    validate: "visudo -cf %s"
+
+- name: "Configure sudoers to allow timeshift-gtk without a password"
+  become: true
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers.d/timeshift-gtk
+    state: present
+    create: true
+    line: "{{ ansible_env.USER }} ALL=(ALL) NOPASSWD: /usr/bin/timeshift-gtk"
+    validate: "visudo -cf %s"
+
+# Grub-Btrfs Service Configuration
+- name: "Grub-Btrfs | {{ ansible_distribution }} | Enable and Start Grub-Btrfsd Service"
+  ansible.builtin.systemd:
+    name: "grub-btrfsd"
+    enabled: true
+    state: started
+  become: true
+
+- name: "Grub-Btrfs | {{ ansible_distribution }} | Modify Grub-Btrfsd Service File"
+  ansible.builtin.lineinfile:
+    path: "/etc/systemd/system/grub-btrfsd.service"
+    regexp: "^ExecStart=/usr/bin/grub-btrfsd --syslog"
+    line: "ExecStart=/usr/bin/grub-btrfsd --syslog --timeshift-auto"
+  become: true
+
+- name: "Grub-Btrfs | {{ ansible_distribution }} | Reload and Restart Grub-Btrfsd Service"
+  ansible.builtin.systemd:
+    name: "grub-btrfsd"
+    daemon_reload: true
+    state: restarted
+  become: true
+
+# Timeshift Configuration
+- name: "Timeshift | {{ ansible_distribution }} | Check if /etc/timeshift/timeshift.json is a Symlink"
+  ansible.builtin.stat:
+    path: "/etc/timeshift/timeshift.json"
+  register: timeshift_config_stat
+
+- name: "Timeshift | {{ ansible_distribution }} | Remove Existing /etc/timeshift/timeshift.json if Not a Symlink"
+  ansible.builtin.file:
+    path: "/etc/timeshift/timeshift.json"
+    state: absent
+  when: timeshift_config_stat.stat.exists and not timeshift_config_stat.stat.islnk
+  become: true
+
+- name: "Timeshift | {{ ansible_distribution }} | Create Symlink to Role Files Directory"
+  ansible.builtin.file:
+    src: "{{ role_path }}/files/timeshift.json"
+    dest: "/etc/timeshift/timeshift.json"
+    state: link
+    force: true
+  become: true
+
+- name: "Timeshift | {{ ansible_distribution }} | Set Correct Permissions for /etc/timeshift/timeshift.json"
+  ansible.builtin.file:
+    path: "/etc/timeshift/timeshift.json"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  become: true
