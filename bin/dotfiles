@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# color codes
+# Color codes
 RESTORE='\033[0m'
 NC='\033[0m'
 BLACK='\033[00;30m'
@@ -10,7 +10,7 @@ YELLOW='\033[00;33m'
 BLUE='\033[00;34m'
 PURPLE='\033[00;35m'
 CYAN='\033[00;36m'
-SEA="\\033[38;5;49m"
+SEA='\033[38;5;49m'
 LIGHTGRAY='\033[00;37m'
 LBLACK='\033[01;30m'
 LRED='\033[01;31m'
@@ -22,23 +22,23 @@ LCYAN='\033[01;36m'
 WHITE='\033[01;37m'
 OVERWRITE='\e[1A\e[K'
 
-#emoji codes
+# Emoji codes
 CHECK_MARK="${GREEN}\xE2\x9C\x94${NC}"
 X_MARK="${RED}\xE2\x9C\x96${NC}"
 PIN="${RED}\xF0\x9F\x93\x8C${NC}"
 CLOCK="${GREEN}\xE2\x8C\x9B${NC}"
 ARROW="${SEA}\xE2\x96\xB6${NC}"
 BOOK="${RED}\xF0\x9F\x93\x8B${NC}"
-HOT="${ORANGE}\xF0\x9F\x94\xA5${NC}"
+HOT="${YELLOW}\xF0\x9F\x94\xA5${NC}"
 WARNING="${RED}\xF0\x9F\x9A\xA8${NC}"
 RIGHT_ANGLE="${GREEN}\xE2\x88\x9F${NC}"
 
 DOTFILES_LOG="$HOME/.dotfiles.log"
 
+# Exit on any error
 set -e
 
 # Paths
-CONFIG_DIR="$HOME/.config/dotfiles"
 VAULT_SECRET="$HOME/.ansible-vault/vault.secret"
 DOTFILES_DIR="$HOME/.dotfiles"
 INVENTORY_FILE="$DOTFILES_DIR/inventory"
@@ -47,56 +47,48 @@ IS_FIRST_RUN="$HOME/.dotfiles_run"
 
 # Check if VAULT_SECRET exists and is not empty
 if [[ ! -f "$VAULT_SECRET" || ! -s "$VAULT_SECRET" ]]; then
-  echo -e "${X_MARK} ${RED}VAULT_SECRET is missing or empty. Please provide a valid vault secret file at $VAULT_SECRET"
+  printf "%b %bVAULT_SECRET is missing or empty. Please provide a valid vault secret file at %s%b\n" "$X_MARK" "$RED" "$VAULT_SECRET" "$NC"
   exit 1
 fi
 
-# _header colorize the given argument with spacing
+# Function to set and display task header
 function _task {
-  # if _task is called while a task was set, complete the previous
-  if [[ $TASK != "" ]]; then
-    printf "${OVERWRITE}${LGREEN} [✓]  ${LGREEN}${TASK}\n"
+  if [[ -n "$TASK" ]]; then
+    printf "%b%b [✓] %b%s%b\n" "$OVERWRITE" "$LGREEN" "$LGREEN" "$TASK" "$NC"
   fi
-  # set new task title and print
   TASK=$1
-  printf "${LBLACK} [ ]  ${TASK} \n${LRED}"
+  printf "%b [ ] %s\n%b" "$LBLACK" "$TASK" "$LRED"
 }
 
-# _cmd performs commands with error checking
+# Function to execute a command and handle errors
 function _cmd {
-  #create log if it doesn't exist
-  if ! [[ -f $DOTFILES_LOG ]]; then
-    touch $DOTFILES_LOG
-  fi
-  # empty conduro.log
-
-  >$DOTFILES_LOG
-  # hide stdout, on error we print and exit
+  [[ ! -f "$DOTFILES_LOG" ]] && touch "$DOTFILES_LOG"
+  : >"$DOTFILES_LOG"
   if eval "$1" 1>/dev/null 2>"$DOTFILES_LOG"; then
-    return 0 # success
+    return 0
   fi
-  # read error from log and add spacing
-  printf "${OVERWRITE}${LRED} [X]  ${TASK}${LRED}\n"
-  while read line; do
-    printf "      ${line}\n"
-  done <$DOTFILES_LOG
+  printf "%b%b [X] %b%s%b\n" "$OVERWRITE" "$LRED" "$LRED" "$TASK" "$NC"
+  while read -r line; do
+    printf "      %s\n" "$line"
+  done <"$DOTFILES_LOG"
   printf "\n"
-  # remove log file
-  rm $DOTFILES_LOG
-  # exit installation
+  rm "$DOTFILES_LOG"
   exit 1
 }
 
+# Function to clear current task
 function _clear_task {
   TASK=""
 }
 
+# Function to mark task as done
 function _task_done {
-  printf "${OVERWRITE}${LGREEN} [✓]  ${LGREEN}${TASK}\n"
+  printf "%b%b [✓] %b%s%b\n" "$OVERWRITE" "$LGREEN" "$LGREEN" "$TASK" "$NC"
   _clear_task
 }
 
-function ubuntu_setup() {
+# Function to setup Ubuntu
+function ubuntu_setup {
   if ! dpkg -s ansible >/dev/null 2>&1; then
     _task "Installing Ansible"
     _cmd "sudo apt-get update"
@@ -121,13 +113,13 @@ function ubuntu_setup() {
   fi
 }
 
-function arch_setup() {
-  if ! [ -x "$(command -v ansible)" ]; then
+# Function to setup Arch-based systems
+function arch_setup {
+  if ! command -v ansible >/dev/null; then
     _task "Installing Ansible"
     _cmd "sudo pacman -Sy --noconfirm"
     _cmd "sudo pacman -S --noconfirm ansible"
     _cmd "sudo pacman -S --noconfirm python-argcomplete"
-    # _cmd "sudo activate-global-python-argcomplete3"
   fi
   if ! pacman -Q python3 >/dev/null 2>&1; then
     _task "Installing Python3"
@@ -141,29 +133,28 @@ function arch_setup() {
     _task "Installing Python3 Watchdog"
     _cmd "sudo pacman -S --noconfirm python-watchdog"
   fi
-
   if ! pacman -Q openssh >/dev/null 2>&1; then
     _task "Installing OpenSSH"
     _cmd "sudo pacman -S --noconfirm openssh"
   fi
-
   _task "Setting Locale"
   _cmd "sudo localectl set-locale LANG=en_US.UTF-8"
 }
 
-update_ansible_galaxy() {
+# Function to update Ansible Galaxy
+function update_ansible_galaxy {
   local os=$1
   local os_requirements=""
   _task "Updating Ansible Galaxy"
-  if [ -f "$DOTFILES_DIR/requirements/$os.yml" ]; then
-    _task "${OVERWRITE}Updating Ansible Galaxy with OS Config: $os"
+  if [[ -f "$DOTFILES_DIR/requirements/$os.yml" ]]; then
+    _task "Updating Ansible Galaxy with OS Config: $os"
     os_requirements="$DOTFILES_DIR/requirements/$os.yml"
   fi
   _cmd "ansible-galaxy install -r $DOTFILES_DIR/requirements/common.yml $os_requirements"
 }
 
 # Usage function
-usage() {
+function usage {
   echo "Usage: $0 [-r role1,role2,...] [--roles role1,role2,...] [-h] [--help]"
   echo
   echo "Options:"
@@ -208,7 +199,8 @@ endeavouros | arch | manjaro)
   ;;
 esac
 
-if ! [[ -f "$SSH_DIR/authorized_keys" ]]; then
+# Check and generate SSH keys if needed
+if [[ ! -f "$SSH_DIR/authorized_keys" ]]; then
   _task "Generating SSH keys"
   _cmd "mkdir -p $SSH_DIR"
   _cmd "chmod 700 $SSH_DIR"
@@ -216,7 +208,8 @@ if ! [[ -f "$SSH_DIR/authorized_keys" ]]; then
   _cmd "cat $SSH_DIR/id_rsa.pub >> $SSH_DIR/authorized_keys"
 fi
 
-if ! [[ -d "$DOTFILES_DIR" ]]; then
+# Clone or update dotfiles repository
+if [[ ! -d "$DOTFILES_DIR" ]]; then
   _task "Cloning repository"
   _cmd "git clone --quiet https://github.com/Zacer559/dotfiles.git $DOTFILES_DIR"
 else
@@ -224,16 +217,16 @@ else
   _cmd "git -C $DOTFILES_DIR pull --quiet"
 fi
 
-pushd "$DOTFILES_DIR" 2>&1 >/dev/null
-update_ansible_galaxy $ID
+pushd "$DOTFILES_DIR" >/dev/null 2>&1
+update_ansible_galaxy "$ID"
 
 _task "Running playbook"
 _task_done
-if [[ -f $VAULT_SECRET ]]; then
+if [[ -f "$VAULT_SECRET" ]]; then
   if [[ ${#ROLES_LIST[@]} -gt 0 ]]; then
-    ansible-playbook --vault-password-file $VAULT_SECRET -i "$INVENTORY_FILE" "$DOTFILES_DIR/main.yml" -e "roles_list=${ROLES_LIST[*]}"
+    ansible-playbook --vault-password-file "$VAULT_SECRET" -i "$INVENTORY_FILE" "$DOTFILES_DIR/main.yml" -e "roles_list=${ROLES_LIST[*]}"
   else
-    ansible-playbook --vault-password-file $VAULT_SECRET -i "$INVENTORY_FILE" "$DOTFILES_DIR/main.yml"
+    ansible-playbook --vault-password-file "$VAULT_SECRET" -i "$INVENTORY_FILE" "$DOTFILES_DIR/main.yml"
   fi
 else
   if [[ ${#ROLES_LIST[@]} -gt 0 ]]; then
@@ -242,12 +235,11 @@ else
     ansible-playbook -i "$INVENTORY_FILE" "$DOTFILES_DIR/main.yml"
   fi
 fi
-popd 2>&1 >/dev/null
+popd >/dev/null 2>&1
 
-# if ! [[ -f "$IS_FIRST_RUN" ]]; then
-#   echo -e "${CHECK_MARK} ${GREEN}First run complete!${NC}"
-#   echo -e "${ARROW} ${CYAN}Please reboot your computer to complete the setup.${NC}"
-#   touch "$IS_FIRST_RUN"
-# fi
-
-# vi:ft=sh:
+# Uncomment the following block if you want to prompt for a reboot after the first run
+if [[ ! -f "$IS_FIRST_RUN" ]]; then
+  printf "%b %bFirst run complete!%b\n" "$CHECK_MARK" "$GREEN" "$NC"
+  printf "%b %bPlease reboot your computer to complete the setup.%b\n" "$ARROW" "$CYAN" "$NC"
+  touch "$IS_FIRST_RUN"
+fi
