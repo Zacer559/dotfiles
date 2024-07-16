@@ -41,13 +41,16 @@ set -e
 CONFIG_DIR="$HOME/.config/dotfiles"
 VAULT_SECRET="$HOME/.ansible-vault/vault.secret"
 DOTFILES_DIR="$HOME/.dotfiles"
+INVENTORY_FILE="$DOTFILES_DIR/inventory"
 SSH_DIR="$HOME/.ssh"
 IS_FIRST_RUN="$HOME/.dotfiles_run"
+
 # Check if VAULT_SECRET exists and is not empty
 if [[ ! -f "$VAULT_SECRET" || ! -s "$VAULT_SECRET" ]]; then
   echo -e "${X_MARK} ${RED}VAULT_SECRET is missing or empty. Please provide a valid vault secret file at $VAULT_SECRET"
   exit 1
 fi
+
 # _header colorize the given argument with spacing
 function _task {
   # if _task is called while a task was set, complete the previous
@@ -69,7 +72,7 @@ function _cmd {
 
   >$DOTFILES_LOG
   # hide stdout, on error we print and exit
-  if eval "$1" 1>/dev/null 2>$DOTFILES_LOG; then
+  if eval "$1" 1>/dev/null 2>"$DOTFILES_LOG"; then
     return 0 # success
   fi
   # read error from log and add spacing
@@ -159,6 +162,37 @@ update_ansible_galaxy() {
   _cmd "ansible-galaxy install -r $DOTFILES_DIR/requirements/common.yml $os_requirements"
 }
 
+# Usage function
+usage() {
+  echo "Usage: $0 [-r role1,role2,...] [--roles role1,role2,...] [-h] [--help]"
+  echo
+  echo "Options:"
+  echo "  -r, --roles    Specify the roles to run, separated by commas"
+  echo "  -h, --help     Display this help message"
+}
+
+# Parse arguments
+ROLES_LIST=()
+
+while [[ "$#" -gt 0 ]]; do
+  case $1 in
+  -r | --roles)
+    IFS=',' read -r -a ROLES_LIST <<<"$2"
+    shift
+    ;;
+  -h | --help)
+    usage
+    exit 0
+    ;;
+  *)
+    echo "Unknown option: $1"
+    usage
+    exit 1
+    ;;
+  esac
+  shift
+done
+
 source /etc/os-release
 _task "Loading Setup for detected OS: $ID"
 case $ID in
@@ -196,17 +230,24 @@ update_ansible_galaxy $ID
 _task "Running playbook"
 _task_done
 if [[ -f $VAULT_SECRET ]]; then
-  ansible-playbook --vault-password-file $VAULT_SECRET "$DOTFILES_DIR/main.yml" "$@"
+  if [[ ${#ROLES_LIST[@]} -gt 0 ]]; then
+    ansible-playbook --vault-password-file $VAULT_SECRET -i "$INVENTORY_FILE" "$DOTFILES_DIR/main.yml" -e "roles_list=${ROLES_LIST[*]}"
+  else
+    ansible-playbook --vault-password-file $VAULT_SECRET -i "$INVENTORY_FILE" "$DOTFILES_DIR/main.yml"
+  fi
 else
-  ansible-playbook "$DOTFILES_DIR/main.yml" "$@"
+  if [[ ${#ROLES_LIST[@]} -gt 0 ]]; then
+    ansible-playbook -i "$INVENTORY_FILE" "$DOTFILES_DIR/main.yml" -e "roles_list=${ROLES_LIST[*]}"
+  else
+    ansible-playbook -i "$INVENTORY_FILE" "$DOTFILES_DIR/main.yml"
+  fi
 fi
-
 popd 2>&1 >/dev/null
 
 # if ! [[ -f "$IS_FIRST_RUN" ]]; then
-# 	echo -e "${CHECK_MARK} ${GREEN}First run complete!${NC}"
-# 	echo -e "${ARROW} ${CYAN}Please reboot your computer to complete the setup.${NC}"
-# 	touch "$IS_FIRST_RUN"
+#   echo -e "${CHECK_MARK} ${GREEN}First run complete!${NC}"
+#   echo -e "${ARROW} ${CYAN}Please reboot your computer to complete the setup.${NC}"
+#   touch "$IS_FIRST_RUN"
 # fi
 
 # vi:ft=sh:

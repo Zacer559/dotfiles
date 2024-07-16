@@ -34,11 +34,13 @@
   vars:
     # Define the roles to exclude
     exclude_roles: []
+    specified_roles_list: "{{ roles_list | default([]) }}"
+    run_roles: "{{ default_roles if specified_roles_list|length == 0 else specified_roles_list }}"
 
   tasks:
     - name: Set roles
       ansible.builtin.set_fact:
-        run_roles: "{{ default_roles }}"
+        run_roles: "{{ run_roles }}"
       tags:
         - always
 
