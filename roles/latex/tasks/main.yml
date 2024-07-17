@@ -1,5 +1,5 @@
 ---
-- name: "Latex  | Run Tasks: {{ ansible_distribution }}"
+- name: "Latex | Run Tasks: {{ ansible_distribution }}"
   ansible.builtin.include_tasks: "{{ ansible_distribution }}.yml"
 
 - name: "Latex | Ensure configuration directory exists"
