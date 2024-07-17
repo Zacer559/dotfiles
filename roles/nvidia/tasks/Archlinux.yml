@@ -3,7 +3,7 @@
   become: true
   ansible.builtin.pacman:
     name:
-      - nvidia-dkms
+      - nvidia
       - nvidia-utils
       - libva-nvidia-driver
       - nvidia-container-toolkit
@@ -71,4 +71,3 @@
     name: gpu_fan_control.service
     enabled: true
     state: started
-
