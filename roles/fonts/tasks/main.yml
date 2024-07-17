@@ -1,3 +1,142 @@
 ---
-- name: "Fonts  | Run Tasks: {{ ansible_distribution }}"
+- name: "Fonts | Run Tasks: {{ ansible_distribution }}"
   ansible.builtin.include_tasks: "{{ ansible_distribution }}.yml"
+
+# Checking if FiraCode Nerd Fonts are already installed
+- name: "Fonts | Check if FiraCode Nerd Fonts are already installed"
+  ansible.builtin.shell: "set -o pipefail && ls /usr/local/share/fonts/FiraCode-NF"
+  register: fc_list_output
+  failed_when: false
+  changed_when: false
+
+- name: "Fonts | List of expected FiraCode Nerd Font files"
+  ansible.builtin.set_fact:
+    expected_fonts:
+      - FiraCodeNerdFont-SemiBold.ttf
+      - FiraCodeNerdFontMono-Medium.ttf
+      - FiraCodeNerdFontPropo-Retina.ttf
+      - FiraCodeNerdFont-Retina.ttf
+      - FiraCodeNerdFontPropo-Regular.ttf
+      - FiraCodeNerdFontPropo-Bold.ttf
+      - FiraCodeNerdFont-Medium.ttf
+      - FiraCodeNerdFont-Light.ttf
+      - FiraCodeNerdFontMono-Regular.ttf
+      - FiraCodeNerdFontMono-Light.ttf
+      - FiraCodeNerdFontMono-Retina.ttf
+      - FiraCodeNerdFont-Bold.ttf
+      - FiraCodeNerdFontPropo-Medium.ttf
+      - FiraCodeNerdFontPropo-SemiBold.ttf
+      - FiraCodeNerdFontPropo-Light.ttf
+      - FiraCodeNerdFont-Regular.ttf
+      - FiraCodeNerdFontMono-SemiBold.ttf
+      - FiraCodeNerdFontMono-Bold.ttf
+
+- name: "Fonts | Check if all expected fonts are installed"
+  ansible.builtin.set_fact:
+    fonts_missing: "{{ expected_fonts | difference(fc_list_output.stdout_lines | map('basename') | list) }}"
+
+- name: "Fonts | Determine if installation is needed"
+  ansible.builtin.set_fact:
+    firacode_installed: "{{ fonts_missing | length == 0 }}"
+
+# Get the latest release information from GitHub
+- name: "Fonts | Get latest FiraCode Nerd Font release info"
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/ryanoasis/nerd-fonts/releases/latest
+    return_content: true
+  register: latest_release
+
+- name: "Fonts | Set latest release version"
+  ansible.builtin.set_fact:
+    latest_version: "{{ latest_release.json.tag_name }}"
+
+# Downloading and installing FiraCode Nerd Fonts if needed
+- name: "Fonts | Create necessary directories"
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  become: true
+  loop:
+    - /usr/local/share/fonts
+    - /usr/local/share/fonts/FiraCode-NF
+  when: not firacode_installed
+
+- name: "Fonts | Download FiraCode Nerd Font zip"
+  ansible.builtin.get_url:
+    url: "https://github.com/ryanoasis/nerd-fonts/releases/download/{{ latest_version }}/FiraCode.zip"
+    dest: /tmp/FiraCode.zip
+    mode: "0644"
+  become: true
+
+- name: "Fonts | Ensure /tmp/FiraCode directory exists"
+  ansible.builtin.file:
+    path: /tmp/FiraCode
+    state: directory
+    mode: "0755"
+  become: true
+
+- name: "Fonts | Unzip FiraCode Nerd Font to temp location"
+  ansible.builtin.unarchive:
+    src: /tmp/FiraCode.zip
+    dest: /tmp/FiraCode
+    remote_src: true
+  become: true
+  register: unarchive_result
+  failed_when: unarchive_result is failed
+
+# Calculating and comparing font file hashes to determine if update is needed
+- name: "Fonts | Calculate hashes of downloaded fonts"
+  ansible.builtin.shell: "sha256sum /tmp/FiraCode/*"
+  register: downloaded_hashes
+  failed_when: downloaded_hashes is failed
+  changed_when: false
+
+- name: "Fonts | Calculate hashes of installed fonts"
+  ansible.builtin.shell: "sha256sum /usr/local/share/fonts/FiraCode-NF/*"
+  register: installed_hashes
+  when: firacode_installed
+  failed_when: installed_hashes is failed
+  changed_when: false
+
+- name: "Fonts | Compare hashes"
+  ansible.builtin.set_fact:
+    font_hashes_match: >-
+      {{
+        downloaded_hashes.stdout_lines
+        | map('split', ' ')
+        | map('first')
+        | difference(installed_hashes.stdout_lines | map('split', ' ') | map('first'))
+        | length == 0
+      }}
+
+- name: "Fonts | Determine if update is needed"
+  ansible.builtin.set_fact:
+    update_needed: "{{ not font_hashes_match }}"
+  when: firacode_installed
+
+# Installing or updating FiraCode Nerd Fonts
+- name: "Fonts | Unzip FiraCode Nerd Font to final location"
+  ansible.builtin.unarchive:
+    src: /tmp/FiraCode.zip
+    dest: /usr/local/share/fonts/FiraCode-NF
+    remote_src: true
+  become: true
+  when: not firacode_installed or update_needed
+
+- name: "Fonts | Refresh font cache"
+  ansible.builtin.command:
+    cmd: fc-cache -fv
+  when: not firacode_installed or update_needed
+  register: fc_cache_output
+  changed_when: "'FiraCode' in fc_cache_output.stdout"
+
+- name: "Fonts | Ensure permissions on font files"
+  ansible.builtin.file:
+    path: /usr/local/share/fonts/FiraCode-NF
+    recurse: true
+    owner: root
+    group: root
+    mode: "0655"
+  become: true
+  when: not firacode_installed or update_needed
