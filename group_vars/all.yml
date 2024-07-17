@@ -192,3 +192,11 @@ atuin_key: !vault |
   31656463613638386432373139353664356264323131313764646232653032373139616561613439
   39643436643835373032666637363330303132396165393033383539643961656662396532366364
   38663734623835613738
+#python
+conda_bin_path: "/opt/anaconda/bin/activate"
+zshrc_path: "~/.zshrc"
+bashrc_path: "~/.bashrc"
+ca_bundle_path: "/etc/ssl/certs/ca-certificates.crt"
+cryptography_legacy: "1"
+nvim_env_name: "nvim-python"
+nvim_python_version: "3.12"
