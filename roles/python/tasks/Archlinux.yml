@@ -29,7 +29,6 @@
 - name: "Python | {{ ansible_distribution }} | Initialize conda environment and setup zsh"
   ansible.builtin.shell: |
     source /opt/anaconda/bin/activate root
-    conda init zsh
   args:
     executable: /bin/bash
 
@@ -78,6 +77,8 @@
 - name: "Activate nvim-python environment and install pip and pynvim"
   ansible.builtin.shell: |
     source /opt/anaconda/bin/activate nvim-python
+
+    conda init zsh
     conda install pip -y
     pip install pynvim pandas matplotlib keras_tuner tensorflow scikit-learn numpy pyyaml jsonschema-specifications rpds-py nbformat fastjsonschema jsonschema attrs referencing jupytext ipykernel pynvml
   args:
