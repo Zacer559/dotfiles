@@ -92,8 +92,10 @@ function update_ansible_galaxy {
 # Check if VAULT_SECRET exists, is not empty, and can correctly decrypt existing variables
 function check_vault_secret {
   _task "Checking Ansible Vault secret"
-  local vault_dir=$(dirname "$VAULT_SECRET")
-  local temp_vault_file=$(mktemp)
+  local vault_dir
+  vault_dir=$(dirname "$VAULT_SECRET")
+  local temp_vault_file
+  temp_vault_file=$(mktemp)
   local is_valid=false
 
   # Ensure ansible-vault is installed
@@ -116,7 +118,7 @@ function check_vault_secret {
   while [ "$is_valid" = false ]; do
     if [[ ! -f "$VAULT_SECRET" || ! -s "$VAULT_SECRET" ]]; then
       print_warning "Ansible Vault secret is missing or empty."
-      read -sp "Please enter your Ansible Vault secret: " vault_secret
+      read -srp "Please enter your Ansible Vault secret: " vault_secret
       echo
       if [[ -z "$vault_secret" ]]; then
         print_error "Vault secret cannot be empty. Please try again."
