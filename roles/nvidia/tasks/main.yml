@@ -1,3 +1,65 @@
 ---
 - name: "Nvidia   | Run Tasks: {{ ansible_distribution }}"
   ansible.builtin.include_tasks: "{{ ansible_distribution }}.yml"
+
+- name: "Nvidia | Check if nvidia.conf exists in /etc/modprobe.d/"
+  ansible.builtin.stat:
+    path: "/etc/modprobe.d/nvidia.conf"
+  register: nvidia_conf_stat
+  become: true
+
+- name: "Nvidia | Remove existing nvidia.conf if it is not a symlink"
+  ansible.builtin.file:
+    path: "/etc/modprobe.d/nvidia.conf"
+    state: absent
+  when: nvidia_conf_stat.stat.exists and not nvidia_conf_stat.stat.islnk
+  become: true
+
+- name: "Nvidia | Create symlink for nvidia.conf"
+  ansible.builtin.file:
+    src: "{{ role_path }}/files/nvidia.conf"
+    dest: "/etc/modprobe.d/nvidia.conf"
+    state: link
+    force: true
+    mode: "0644"
+    owner: "root"
+    group: "root"
+  become: true
+
+- name: "Nvidia | Copy gpu_fan_control.py to /usr/local/bin"
+  ansible.builtin.copy:
+    src: "{{ role_path }}/files/gpu_fan_control.py"
+    dest: /usr/local/bin/gpu_fan_control.py
+    mode: "0755"
+    owner: "root"
+    group: "root"
+  become: true
+
+- name: "Nvidia | Create systemd service file for GPU Fan Control"
+  become: true
+  ansible.builtin.template:
+    src: "{{ role_path }}/files/gpu_fan_control.service.j2"
+    dest: /etc/systemd/system/gpu_fan_control.service
+    mode: "0644"
+    owner: "root"
+    group: "root"
+  vars:
+    gpu_name: "3080"
+    min_temp: 30
+    min_speed: 10
+    max_temp: 85
+    max_speed: 100
+    interval: 1
+    log_file: "/var/tmp/gpu_fan_speed.log"
+
+- name: "Nvidia | Reload systemd daemon"
+  ansible.builtin.systemd:
+    daemon_reload: true
+  become: true
+
+- name: "Nvidia | Enable and start GPU Fan Control service"
+  ansible.builtin.systemd:
+    name: gpu_fan_control.service
+    enabled: true
+    state: started
+  become: true
