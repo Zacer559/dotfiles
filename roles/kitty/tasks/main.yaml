@@ -17,7 +17,7 @@
   ansible.builtin.file:
     path: "{{ ansible_user_dir }}/.config/kitty"
     state: absent
-  when: not kitty_config_stat.stat.islnk
+  when: kitty_config_stat.stat.exists and not kitty_config_stat.stat.islnk
 
 - name: "Kitty | Config folder"
   ansible.builtin.file:
