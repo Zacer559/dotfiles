@@ -1,3 +1,121 @@
 ---
-- name: "Python    | Run Tasks: {{ ansible_distribution }}"
+- name: "Python | Run Tasks: {{ ansible_distribution }}"
   ansible.builtin.include_tasks: "{{ ansible_distribution }}.yml"
+
+- name: "Python | Initialize conda environment and setup zsh"
+  ansible.builtin.shell: |
+    source {{ conda_bin_path }} root
+  args:
+    executable: /bin/bash
+  changed_when: false
+
+- name: "Python | Ensure CURL_CA_BUNDLE and CRYPTOGRAPHY_OPENSSL_NO_LEGACY are set in .zshrc and .bashrc"
+  ansible.builtin.lineinfile:
+    path: "{{ item.path }}"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    create: true
+  loop:
+    - {
+        path: "{{ zshrc_path }}",
+        regexp: "^export CURL_CA_BUNDLE=",
+        line: "export CURL_CA_BUNDLE={{ ca_bundle_path }}",
+      }
+    - {
+        path: "{{ bashrc_path }}",
+        regexp: "^export CURL_CA_BUNDLE=",
+        line: "export CURL_CA_BUNDLE={{ ca_bundle_path }}",
+      }
+    - {
+        path: "{{ zshrc_path }}",
+        regexp: "^export CRYPTOGRAPHY_OPENSSL_NO_LEGACY=",
+        line: "export CRYPTOGRAPHY_OPENSSL_NO_LEGACY={{ cryptography_legacy }}",
+      }
+    - {
+        path: "{{ bashrc_path }}",
+        regexp: "^export CRYPTOGRAPHY_OPENSSL_NO_LEGACY=",
+        line: "export CRYPTOGRAPHY_OPENSSL_NO_LEGACY={{ cryptography_legacy }}",
+      }
+
+- name: "Python | Check if pyinstaller is already installed"
+  ansible.builtin.shell: |
+    source {{ conda_bin_path }} root
+    conda list | grep pyinstaller
+  register: pyinstaller_check
+  failed_when: pyinstaller_check.rc not in [0, 1]
+  changed_when: false
+  args:
+    executable: /bin/bash
+
+- name: "Python | Install pyinstaller in conda environment"
+  become: true
+  ansible.builtin.shell: |
+    source {{ conda_bin_path }} root
+    export CRYPTOGRAPHY_OPENSSL_NO_LEGACY={{ cryptography_legacy }}
+    conda install -y pyinstaller
+  args:
+    executable: /bin/bash
+  when: pyinstaller_check.rc == 1
+
+- name: "Python | Check if Neovim Python provider environment exists"
+  ansible.builtin.shell: |
+    source {{ conda_bin_path }} root
+    conda env list | grep {{ nvim_env_name }}
+  register: conda_env_check
+  failed_when: conda_env_check.rc not in [0, 1]
+  changed_when: false
+  args:
+    executable: /bin/bash
+
+- name: "Python | Create conda environment for Neovim Python provider"
+  ansible.builtin.shell: |
+    conda create --name {{ nvim_env_name }} python={{ nvim_python_version }} -y
+  args:
+    executable: /bin/bash
+  when: conda_env_check.rc == 1
+
+- name: "Python | Install pip in Neovim Python provider environment"
+  ansible.builtin.shell: |
+    source {{ conda_bin_path }} {{ nvim_env_name }}
+    conda install pip -y
+  args:
+    executable: /bin/bash
+  when: conda_env_check.rc == 1
+
+- name: "Python | Determine the path of the Neovim Python provider environment"
+  ansible.builtin.shell: |
+    conda info --envs | grep {{ nvim_env_name }} | awk '{print $NF}'
+  register: nvim_env_path
+  changed_when: false
+
+- name: "Python | Initialize zsh for conda"
+  ansible.builtin.shell: |
+    conda init --all
+  args:
+    executable: /bin/bash
+  register: conda_init_result
+  changed_when: "'No action taken.' not in conda_init_result.stdout"
+
+- name: "Python | Install Python packages in Neovim Python provider environment"
+  ansible.builtin.pip:
+    name:
+      - pynvim
+      - pandas
+      - matplotlib
+      - keras_tuner
+      - tensorflow
+      - scikit-learn
+      - numpy
+      - pyyaml
+      - jsonschema-specifications
+      - rpds-py
+      - nbformat
+      - fastjsonschema
+      - jsonschema
+      - attrs
+      - referencing
+      - jupytext
+      - ipykernel
+      - pynvml
+    virtualenv: "{{ nvim_env_path.stdout }}"
+    state: present

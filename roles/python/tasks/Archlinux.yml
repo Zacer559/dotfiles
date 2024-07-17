@@ -13,73 +13,15 @@
       - python-watchdog
     state: present
   become: true
+
 - name: "Python | {{ ansible_distribution }} | Install quarto and jupytext"
   kewlfft.aur.aur:
     name:
       - quarto-cli-bin
       - python-jupytext
     state: present
-  become: true
 
 - name: "Python | {{ ansible_distribution }} | Install anaconda"
   kewlfft.aur.aur:
     name: "anaconda"
     state: present
-
-- name: "Python | {{ ansible_distribution }} | Initialize conda environment and setup zsh"
-  ansible.builtin.shell: |
-    source /opt/anaconda/bin/activate root
-  args:
-    executable: /bin/bash
-
-- name: "Ensure CURL_CA_BUNDLE is set in .zshrc"
-  ansible.builtin.lineinfile:
-    path: ~/.zshrc
-    regexp: "^export CURL_CA_BUNDLE="
-    line: "export CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt"
-    create: true
-
-- name: "Ensure CURL_CA_BUNDLE is set in .bashrc"
-  ansible.builtin.lineinfile:
-    path: ~/.bashrc
-    regexp: "^export CURL_CA_BUNDLE="
-    line: "export CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt"
-    create: true
-
-- name: "Ensure CRYPTOGRAPHY_OPENSSL_NO_LEGACY is set in .zshrc"
-  ansible.builtin.lineinfile:
-    path: ~/.zshrc
-    regexp: "^export CRYPTOGRAPHY_OPENSSL_NO_LEGACY="
-    line: "export CRYPTOGRAPHY_OPENSSL_NO_LEGACY=1"
-    create: true
-- name: "Ensure CRYPTOGRAPHY_OPENSSL_NO_LEGACY is set in .bashrc"
-  ansible.builtin.lineinfile:
-    path: ~/.bashrc
-    regexp: "^export CRYPTOGRAPHY_OPENSSL_NO_LEGACY="
-    line: "export CRYPTOGRAPHY_OPENSSL_NO_LEGACY=1"
-    create: true
-- name: "Python | {{ ansible_distribution }} | Install pyinstaller in conda environment"
-  ansible.builtin.shell: |
-    source /opt/anaconda/bin/activate root
-    export CRYPTOGRAPHY_OPENSSL_NO_LEGACY=1
-    conda install -y pyinstaller
-  args:
-    executable: /bin/bash
-  become: true
-
-- name: "Create conda environment for Neovim Python provider"
-  ansible.builtin.shell: |
-    source /opt/anaconda/bin/activate root
-    conda create --name nvim-python python=3.12 -y
-  args:
-    executable: /bin/bash
-
-- name: "Activate nvim-python environment and install pip and pynvim"
-  ansible.builtin.shell: |
-    source /opt/anaconda/bin/activate nvim-python
-
-    conda init zsh
-    conda install pip -y
-    pip install pynvim pandas matplotlib keras_tuner tensorflow scikit-learn numpy pyyaml jsonschema-specifications rpds-py nbformat fastjsonschema jsonschema attrs referencing jupytext ipykernel pynvml
-  args:
-    executable: /bin/bash
