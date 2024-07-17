@@ -1,245 +1,97 @@
 #!/bin/bash
 
-# Color codes
-RESTORE='\033[0m'
-NC='\033[0m'
-BLACK='\033[00;30m'
-RED='\033[00;31m'
-GREEN='\033[00;32m'
-YELLOW='\033[00;33m'
-BLUE='\033[00;34m'
-PURPLE='\033[00;35m'
-CYAN='\033[00;36m'
-SEA='\033[38;5;49m'
-LIGHTGRAY='\033[00;37m'
-LBLACK='\033[01;30m'
-LRED='\033[01;31m'
-LGREEN='\033[01;32m'
-LYELLOW='\033[01;33m'
-LBLUE='\033[01;34m'
-LPURPLE='\033[01;35m'
-LCYAN='\033[01;36m'
-WHITE='\033[01;37m'
-OVERWRITE='\e[1A\e[K'
+# Source utility functions and variables
+source "$(dirname "$0")/utils.sh"
+source "$(dirname "$0")/os_setup.sh"
 
-# Emoji codes
-CHECK_MARK="${GREEN}\xE2\x9C\x94${NC}"
-X_MARK="${RED}\xE2\x9C\x96${NC}"
-PIN="${RED}\xF0\x9F\x93\x8C${NC}"
-CLOCK="${GREEN}\xE2\x8C\x9B${NC}"
-ARROW="${SEA}\xE2\x96\xB6${NC}"
-BOOK="${RED}\xF0\x9F\x93\x8B${NC}"
-HOT="${YELLOW}\xF0\x9F\x94\xA5${NC}"
-WARNING="${RED}\xF0\x9F\x9A\xA8${NC}"
-RIGHT_ANGLE="${GREEN}\xE2\x88\x9F${NC}"
-
-DOTFILES_LOG="$HOME/.dotfiles.log"
-
-# Exit on any error
-set -e
-
-# Paths
-VAULT_SECRET="$HOME/.ansible-vault/vault.secret"
-DOTFILES_DIR="$HOME/.dotfiles"
-INVENTORY_FILE="$DOTFILES_DIR/inventory"
-SSH_DIR="$HOME/.ssh"
-IS_FIRST_RUN="$HOME/.dotfiles_run"
-
-# Check if VAULT_SECRET exists and is not empty
-if [[ ! -f "$VAULT_SECRET" || ! -s "$VAULT_SECRET" ]]; then
-  printf "%b %bVAULT_SECRET is missing or empty. Please provide a valid vault secret file at %s%b\n" "$X_MARK" "$RED" "$VAULT_SECRET" "$NC"
-  exit 1
-fi
-
-# Function to set and display task header
-function _task {
-  if [[ -n "$TASK" ]]; then
-    printf "%b%b [✓] %b%s%b\n" "$OVERWRITE" "$LGREEN" "$LGREEN" "$TASK" "$NC"
-  fi
-  TASK=$1
-  printf "%b [ ] %s\n%b" "$LBLACK" "$TASK" "$LRED"
+# Main setup function
+main() {
+  check_vault_secret
+  parse_arguments "$@"
+  detect_and_setup_os
+  setup_ssh_keys
+  clone_or_update_repository
+  run_ansible_playbook
+  handle_first_run
 }
 
-# Function to execute a command and handle errors
-function _cmd {
-  [[ ! -f "$DOTFILES_LOG" ]] && touch "$DOTFILES_LOG"
-  : >"$DOTFILES_LOG"
-  if eval "$1" 1>/dev/null 2>"$DOTFILES_LOG"; then
-    return 0
-  fi
-  printf "%b%b [X] %b%s%b\n" "$OVERWRITE" "$LRED" "$LRED" "$TASK" "$NC"
-  while read -r line; do
-    printf "      %s\n" "$line"
-  done <"$DOTFILES_LOG"
-  printf "\n"
-  rm "$DOTFILES_LOG"
-  exit 1
-}
-
-# Function to clear current task
-function _clear_task {
-  TASK=""
-}
-
-# Function to mark task as done
-function _task_done {
-  printf "%b%b [✓] %b%s%b\n" "$OVERWRITE" "$LGREEN" "$LGREEN" "$TASK" "$NC"
-  _clear_task
-}
-
-# Function to setup Ubuntu
-function ubuntu_setup {
-  if ! dpkg -s ansible >/dev/null 2>&1; then
-    _task "Installing Ansible"
-    _cmd "sudo apt-get update"
-    _cmd "sudo apt-get install -y software-properties-common"
-    _cmd "sudo apt-add-repository -y ppa:ansible/ansible"
-    _cmd "sudo apt-get update"
-    _cmd "sudo apt-get install -y ansible"
-    _cmd "sudo apt-get install python3-argcomplete"
-    _cmd "sudo activate-global-python-argcomplete3"
-  fi
-  if ! dpkg -s python3 >/dev/null 2>&1; then
-    _task "Installing Python3"
-    _cmd "sudo apt-get install -y python3"
-  fi
-  if ! dpkg -s python3-pip >/dev/null 2>&1; then
-    _task "Installing Python3 Pip"
-    _cmd "sudo apt-get install -y python3-pip"
-  fi
-  if ! pip3 list | grep watchdog >/dev/null 2>&1; then
-    _task "Installing Python3 Watchdog"
-    _cmd "sudo apt-get install -y python3-watchdog"
-  fi
-}
-
-# Function to setup Arch-based systems
-function arch_setup {
-  if ! command -v ansible >/dev/null; then
-    _task "Installing Ansible"
-    _cmd "sudo pacman -Sy --noconfirm"
-    _cmd "sudo pacman -S --noconfirm ansible"
-    _cmd "sudo pacman -S --noconfirm python-argcomplete"
-  fi
-  if ! pacman -Q python3 >/dev/null 2>&1; then
-    _task "Installing Python3"
-    _cmd "sudo pacman -S --noconfirm python3"
-  fi
-  if ! pacman -Q python-pip >/dev/null 2>&1; then
-    _task "Installing Python3 Pip"
-    _cmd "sudo pacman -S --noconfirm python-pip"
-  fi
-  if ! pip3 list | grep watchdog >/dev/null 2>&1; then
-    _task "Installing Python3 Watchdog"
-    _cmd "sudo pacman -S --noconfirm python-watchdog"
-  fi
-  if ! pacman -Q openssh >/dev/null 2>&1; then
-    _task "Installing OpenSSH"
-    _cmd "sudo pacman -S --noconfirm openssh"
-  fi
-  _task "Setting Locale"
-  _cmd "sudo localectl set-locale LANG=en_US.UTF-8"
-}
-
-# Function to update Ansible Galaxy
-function update_ansible_galaxy {
-  local os=$1
-  local os_requirements=""
-  _task "Updating Ansible Galaxy"
-  if [[ -f "$DOTFILES_DIR/requirements/$os.yml" ]]; then
-    _task "Updating Ansible Galaxy with OS Config: $os"
-    os_requirements="$DOTFILES_DIR/requirements/$os.yml"
-  fi
-  _cmd "ansible-galaxy install -r $DOTFILES_DIR/requirements/common.yml $os_requirements"
-}
-
-# Usage function
-function usage {
-  echo "Usage: $0 [-r role1,role2,...] [--roles role1,role2,...] [-h] [--help]"
-  echo
-  echo "Options:"
-  echo "  -r, --roles    Specify the roles to run, separated by commas"
-  echo "  -h, --help     Display this help message"
-}
-
-# Parse arguments
-ROLES_LIST=()
-
-while [[ "$#" -gt 0 ]]; do
-  case $1 in
-  -r | --roles)
-    IFS=',' read -r -a ROLES_LIST <<<"$2"
+# Parse command-line arguments
+parse_arguments() {
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+    -r | --roles)
+      IFS=',' read -r -a ROLES_LIST <<<"$2"
+      shift
+      ;;
+    -h | --help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1"
+      usage
+      exit 1
+      ;;
+    esac
     shift
-    ;;
-  -h | --help)
-    usage
-    exit 0
-    ;;
-  *)
-    echo "Unknown option: $1"
-    usage
-    exit 1
-    ;;
-  esac
-  shift
-done
+  done
+}
 
-source /etc/os-release
-_task "Loading Setup for detected OS: $ID"
-case $ID in
-ubuntu)
-  ubuntu_setup
-  ;;
-endeavouros | arch | manjaro)
-  arch_setup
-  ;;
-*)
-  _task "Unsupported OS"
-  _cmd "echo 'Unsupported OS'"
-  ;;
-esac
-
-# Check and generate SSH keys if needed
-if [[ ! -f "$SSH_DIR/authorized_keys" ]]; then
-  _task "Generating SSH keys"
-  _cmd "mkdir -p $SSH_DIR"
-  _cmd "chmod 700 $SSH_DIR"
-  _cmd "ssh-keygen -b 4096 -t rsa -f $SSH_DIR/id_rsa -N '' -C $USER@$HOSTNAME"
-  _cmd "cat $SSH_DIR/id_rsa.pub >> $SSH_DIR/authorized_keys"
-fi
+# Setup SSH keys
+setup_ssh_keys() {
+  if [[ ! -f "$SSH_DIR/authorized_keys" ]]; then
+    _task "Generating SSH keys"
+    _cmd "mkdir -p $SSH_DIR"
+    _cmd "chmod 700 $SSH_DIR"
+    _cmd "ssh-keygen -b 4096 -t rsa -f $SSH_DIR/id_rsa -N '' -C $USER@$HOSTNAME"
+    _cmd "cat $SSH_DIR/id_rsa.pub >> $SSH_DIR/authorized_keys"
+  fi
+}
 
 # Clone or update dotfiles repository
-if [[ ! -d "$DOTFILES_DIR" ]]; then
-  _task "Cloning repository"
-  _cmd "git clone --quiet https://github.com/Zacer559/dotfiles.git $DOTFILES_DIR"
-else
-  _task "Updating repository"
-  _cmd "git -C $DOTFILES_DIR pull --quiet"
-fi
-
-pushd "$DOTFILES_DIR" >/dev/null 2>&1
-update_ansible_galaxy "$ID"
-
-_task "Running playbook"
-_task_done
-if [[ -f "$VAULT_SECRET" ]]; then
-  if [[ ${#ROLES_LIST[@]} -gt 0 ]]; then
-    ansible-playbook --vault-password-file "$VAULT_SECRET" -i "$INVENTORY_FILE" "$DOTFILES_DIR/main.yml" -e "roles_list=${ROLES_LIST[*]}"
+clone_or_update_repository() {
+  if [[ ! -d "$DOTFILES_DIR" ]]; then
+    _task "Cloning repository"
+    _cmd "git clone --quiet https://github.com/Zacer559/dotfiles.git $DOTFILES_DIR"
   else
-    ansible-playbook --vault-password-file "$VAULT_SECRET" -i "$INVENTORY_FILE" "$DOTFILES_DIR/main.yml"
+    _task "Updating repository"
+    _cmd "git -C $DOTFILES_DIR pull --quiet"
   fi
-else
-  if [[ ${#ROLES_LIST[@]} -gt 0 ]]; then
-    ansible-playbook -i "$INVENTORY_FILE" "$DOTFILES_DIR/main.yml" -e "roles_list=${ROLES_LIST[*]}"
-  else
-    ansible-playbook -i "$INVENTORY_FILE" "$DOTFILES_DIR/main.yml"
-  fi
-fi
-popd >/dev/null 2>&1
 
-# Uncomment the following block if you want to prompt for a reboot after the first run
-if [[ ! -f "$IS_FIRST_RUN" ]]; then
-  printf "%b %bFirst run complete!%b\n" "$CHECK_MARK" "$GREEN" "$NC"
-  printf "%b %bPlease reboot your computer to complete the setup.%b\n" "$ARROW" "$CYAN" "$NC"
-  touch "$IS_FIRST_RUN"
-fi
+  pushd "$DOTFILES_DIR" >/dev/null 2>&1
+  update_ansible_galaxy "$ID"
+  popd >/dev/null 2>&1
+}
+
+# Run Ansible playbook
+run_ansible_playbook() {
+  _task "Running playbook"
+  _task_done
+  pushd "$DOTFILES_DIR" >/dev/null 2>&1
+  local playbook_command="ansible-playbook -i $INVENTORY_FILE"
+
+  if [[ -f "$VAULT_SECRET" ]]; then
+    playbook_command="$playbook_command --vault-password-file $VAULT_SECRET"
+  fi
+
+  if [[ ${#ROLES_LIST[@]} -gt 0 ]]; then
+    playbook_command="$playbook_command -e roles_list=${ROLES_LIST[*]}"
+  fi
+  playbook_command="$playbook_command $DOTFILES_DIR/main.yml"
+  echo "$playbook_command"
+  $playbook_command
+
+  popd >/dev/null 2>&1
+}
+
+# Handle first run
+handle_first_run() {
+  if [[ ! -f "$IS_FIRST_RUN" ]]; then
+    print_success "First run complete!"
+    print_info "Please reboot your computer to complete the setup."
+    touch "$IS_FIRST_RUN"
+  fi
+}
+
+# Run the main function
+main "$@"
