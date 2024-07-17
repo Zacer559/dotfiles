@@ -1,4 +1,4 @@
-- name: "Bash | {{ ansible_distribution }} | Install Atuin with pacman"
+- name: "Atuin | {{ ansible_distribution }} | Install Atuin with pacman"
   ansible.builtin.pacman:
     name:
       - atuin

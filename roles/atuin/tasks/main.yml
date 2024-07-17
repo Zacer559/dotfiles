@@ -1,14 +1,26 @@
 ---
-- name: "Atuin  | Run Tasks: {{ ansible_distribution }}"
+- name: "Atuin | Run Tasks: {{ ansible_distribution }}"
   ansible.builtin.include_tasks: "{{ ansible_distribution }}.yml"
 
-- name: Atuin  | Ensure 'eval "$(atuin init zsh)"' is in ~/.zshrc
+- name: "Atuin | Ensure initialization command is in .zshrc"
   lineinfile:
     path: ~/.zshrc
     line: 'eval "$(atuin init zsh)"'
     insertafter: EOF
     state: present
 
-- name: Atuin   | Login with Atuin using shell command
+- name: Atuin | Check login status
+  shell: atuin status
+  register: atuin_status
+  check_mode: false
+  changed_when: false
+  ignore_errors: true
+
+- name: Atuin | Set login_status variable
+  set_fact:
+    login_status: "{{ 'logged_out' if 'You are not logged in to a sync server' in atuin_status.stdout else 'logged_in' }}"
+
+- name: Atuin | Login if not already logged in
   shell: |
     atuin login -u "{{ atuin_username }}" -p "{{ atuin_password }}" -k "{{ atuin_key }}"
+  when: login_status == 'logged_out'
