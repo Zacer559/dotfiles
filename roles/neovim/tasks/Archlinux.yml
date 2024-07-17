@@ -3,7 +3,7 @@
   kewlfft.aur.aur:
     name: "neovim"
     state: present
-    update_cache: yes
+    update_cache: true
 
 - name: "Neovim | {{ ansible_distribution }} | Install base-devel "
   kewlfft.aur.aur:
