@@ -9,6 +9,7 @@
     state: absent
   when: fancontrol_config_stat.stat.exists and not fancontrol_config_stat.stat.islnk
   become: true
+
 - name: "Fan Control | Create symlink to role files directory"
   ansible.builtin.file:
     src: "{{ role_path }}/files/fancontrol"
@@ -16,6 +17,7 @@
     state: link
     force: true
   become: true
+
 - name: "Fan Control | Set correct permissions for /etc/fancontrol"
   ansible.builtin.file:
     path: "/etc/fancontrol"
@@ -23,13 +25,10 @@
     group: "root"
     mode: "0644"
   become: true
-- name: "Fan Control | Enable fancontrol service"
+
+- name: "Fan Control | Enable and start fancontrol service"
   ansible.builtin.systemd:
     name: fancontrol
     enabled: true
-  become: true
-- name: "Fan Control | Start fancontrol service"
-  ansible.builtin.systemd:
-    name: fancontrol
     state: started
   become: true
