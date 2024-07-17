@@ -78,7 +78,6 @@ run_ansible_playbook() {
     playbook_command="$playbook_command -e roles_list=${ROLES_LIST[*]}"
   fi
   playbook_command="$playbook_command $DOTFILES_DIR/main.yml"
-  echo "$playbook_command"
   $playbook_command
 
   popd >/dev/null 2>&1
