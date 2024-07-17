@@ -64,6 +64,8 @@
   no_log: true
 
 - name: "Git | Download submodules"
-  ansible.builtin.command: "git submodule update --init --recursive"
-  args:
+  ansible.builtin.command:
+    cmd: "git submodule update --init --recursive"
     chdir: "{{ ansible_user_dir }}/.dotfiles"
+  register: git_submodule_update
+  changed_when: git_submodule_update.stdout != ""
