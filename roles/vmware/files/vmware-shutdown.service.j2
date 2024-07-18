@@ -1,0 +1,12 @@
+[Unit]
+Description=Shutdown VMware VMs
+DefaultDependencies=no
+Before=shutdown.target reboot.target halt.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/vmware-shutdown.sh
+TimeoutStartSec=300
+
+[Install]
+WantedBy=shutdown.target reboot.target halt.target

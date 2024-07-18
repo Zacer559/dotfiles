@@ -44,23 +44,7 @@
     owner: "root"
     group: "root"
   become: true
-# - name: "VMware | Set permissions for individual files in /etc/vmware"
-#   ansible.builtin.file:
-#     path: "/etc/vmware/{{ item.path }}"
-#     mode: "{{ item.mode }}"
-#     owner: "root"
-#     group: "root"
-#   with_items:
-#     - { path: "bootstrap", mode: "0644" }
-#     - { path: "config", mode: "0644" }
-#     - { path: "icu", mode: "0777" }
-#     - { path: "netmap.conf", mode: "0666" }
-#     - { path: "networking", mode: "0644" }
-#     - { path: "usbarb.rules", mode: "0640" }
-#     - { path: "vmnet1", mode: "0755" }
-#     - { path: "vmnet8", mode: "0755" }
-#   become: true
-#
+
 - name: "Create symlink for icu"
   ansible.builtin.file:
     src: "/usr/lib/vmware/icu"
@@ -79,6 +63,7 @@
     state: absent
   when: vmware_config_stat.stat.exists and not vmware_config_stat.stat.islnk
   become: true
+
 - name: "VMware | Config folder"
   ansible.builtin.file:
     mode: "0755"
@@ -99,40 +84,40 @@
     recurse: true
     mode: "0755"
   become: true
-# - name: "VMware | Set permissions for individual files in .vmware"
-#   ansible.builtin.file:
-#     path: "{{ ansible_user_dir }}/.vmware/{{ item.path }}"
-#     mode: "{{ item.mode }}"
-#     owner: "{{ ansible_user }}"
-#     group: "{{ ansible_user }}"
-#   with_items:
-#     - { path: "inventory.vmls", mode: "0754" }
-#     - { path: "preferences", mode: "0600" }
-#     - { path: "shortcuts", mode: "0644" }
-- name: "Enable and start vmware-networks.service"
+
+- name: "Enable and start VMware services"
   ansible.builtin.systemd:
-    name: vmware-networks.service
+    name: "{{ item }}"
     enabled: true
     state: started
+  loop:
+    - vmware-networks.service
+    - vmware-usbarbitrator.service
+    - vmware-networks.path
+    - vmware-usbarbitrator.path
   become: true
 
-- name: "Enable and start vmware-usbarbitrator.service"
-  ansible.builtin.systemd:
-    name: vmware-usbarbitrator.service
-    enabled: true
-    state: started
+- name: "VMware | Create VM shutdown script"
+  ansible.builtin.template:
+    src: "{{ role_path }}/files/vmware-shutdown.sh"
+    dest: "/usr/local/bin/vmware-shutdown.sh"
+    mode: "0755"
+    owner: "root"
+    group: "root"
   become: true
 
-- name: "Enable and start vmware-networks.path"
-  ansible.builtin.systemd:
-    name: vmware-networks.path
-    enabled: true
-    state: started
+- name: "VMware | Create systemd service for VM shutdown"
+  ansible.builtin.template:
+    src: "{{ role_path }}/files/vmware-shutdown.service.j2"
+    dest: "/etc/systemd/system/vmware-shutdown.service"
+    mode: "0644"
+    owner: "root"
+    group: "root"
   become: true
 
-- name: "Enable and start vmware-usbarbitrator.path"
+- name: "VMware | Enable VM shutdown service"
   ansible.builtin.systemd:
-    name: vmware-usbarbitrator.path
+    name: vmware-shutdown.service
     enabled: true
-    state: started
+    daemon_reload: true
   become: true
