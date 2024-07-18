@@ -200,3 +200,5 @@ ca_bundle_path: "/etc/ssl/certs/ca-certificates.crt"
 cryptography_legacy: "1"
 nvim_env_name: "nvim-python"
 nvim_python_version: "3.12"
+
+timeshift_config_file: "/etc/timeshift/timeshift.json"
