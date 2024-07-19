@@ -10,12 +10,12 @@
 
 - name: "VMware | Check if /etc/vmware/ is a symlink"
   ansible.builtin.stat:
-    path: "/etc/vmware/"
+    path: "{{ vmware_etc_path }}"
   register: vmware_etc_stat
 
 - name: "VMware | Remove existing /etc/vmware/ if not a symlink"
   ansible.builtin.file:
-    path: "/etc/vmware"
+    path: "{{ vmware_etc_path }}"
     state: absent
   when: vmware_etc_stat.stat.exists and not vmware_etc_stat.stat.islnk
   become: true
@@ -23,43 +23,43 @@
 - name: "VMware | /etc/vmware/ directory"
   ansible.builtin.file:
     mode: "0755"
-    path: "/etc/vmware/"
+    path: "{{ vmware_etc_path }}"
     state: directory
   become: true
 
 - name: "VMware | Create symlink to role files/etc directory"
   ansible.builtin.file:
     src: "{{ role_path }}/files/etc"
-    dest: "/etc/vmware"
+    dest: "{{ vmware_etc_path }}"
     state: link
     force: true
   become: true
 
-- name: "VMware | Set permissions and ownership for /etc/vmware contents"
+- name: "VMware | Set permissions and ownership for /etc/vmware directory (not recursive)"
   ansible.builtin.file:
-    path: "/etc/vmware/"
+    path: "{{ vmware_etc_path }}"
     state: directory
-    recurse: true
     mode: "0755"
     owner: "root"
     group: "root"
   become: true
+  when: vmware_etc_stat.stat.mode != '0755' or vmware_etc_stat.stat.pw_name != 'root' or vmware_etc_stat.stat.gr_name != 'root'
 
-- name: "Create symlink for icu"
+- name: "VMware | Create symlink for icu"
   ansible.builtin.file:
     src: "/usr/lib/vmware/icu"
-    dest: "/etc/vmware/icu"
+    dest: "{{ vmware_etc_path }}/icu"
     state: link
   become: true
 
 - name: "VMware | Check if config folder is a symlink"
   ansible.builtin.stat:
-    path: "{{ ansible_user_dir }}/.vmware"
+    path: "{{ vmware_config_path }}"
   register: vmware_config_stat
 
 - name: "VMware | Remove existing config folder if not a symlink"
   ansible.builtin.file:
-    path: "{{ ansible_user_dir }}/.vmware"
+    path: "{{ vmware_config_path }}"
     state: absent
   when: vmware_config_stat.stat.exists and not vmware_config_stat.stat.islnk
   become: true
@@ -67,29 +67,41 @@
 - name: "VMware | Config folder"
   ansible.builtin.file:
     mode: "0755"
-    path: "{{ ansible_user_dir }}/.vmware/"
+    path: "{{ vmware_config_path }}"
     state: directory
 
 - name: "VMware | Create symlink to role files/config directory"
   ansible.builtin.file:
     src: "{{ role_path }}/files/config"
-    dest: "{{ ansible_user_dir }}/.vmware"
+    dest: "{{ vmware_config_path }}"
     state: link
     force: true
 
-- name: "VMware | Set permissions and ownership for .vmware contents"
+- name: "VMware | Set permissions for .vmware directory (not recursive)"
   ansible.builtin.file:
-    path: "{{ ansible_user_dir }}/.vmware"
+    path: "{{ vmware_config_path }}"
     state: directory
-    recurse: true
     mode: "0755"
   become: true
+  when: vmware_config_stat.stat.mode != '0755'
 
-- name: "Enable and start VMware services"
+- name: "VMware | Set permissions for specific files"
+  ansible.builtin.file:
+    path: "{{ item }}"
+    mode: "0644"
+  loop:
+    - "{{ vmware_etc_path }}/vmnet1/dhcpd/dhcpd.leases"
+    - "{{ vmware_etc_path }}/vmnet1/dhcpd/dhcpd.leases~"
+    - "{{ vmware_etc_path }}/vmnet8/dhcpd/dhcpd.leases"
+    - "{{ vmware_etc_path }}/vmnet8/dhcpd/dhcpd.leases~"
+    - "{{ vmware_config_path }}/preferences"
+    - "{{ vmware_config_path }}/preferences.save"
+  become: true
+
+- name: "VMware | Enable VMware services"
   ansible.builtin.systemd:
     name: "{{ item }}"
     enabled: true
-    state: started
   loop:
     - vmware-networks.service
     - vmware-usbarbitrator.service
@@ -97,22 +109,33 @@
     - vmware-usbarbitrator.path
   become: true
 
-- name: "VMware | Create VM shutdown script"
-  ansible.builtin.template:
-    src: "{{ role_path }}/files/vmware-shutdown.sh"
-    dest: "/usr/local/bin/vmware-shutdown.sh"
-    mode: "0755"
-    owner: "root"
-    group: "root"
+- name: "VMware | Start VMware services"
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: started
+  loop:
+    - vmware-networks.service
+    - vmware-usbarbitrator.service
   become: true
 
-- name: "VMware | Create systemd service for VM shutdown"
+- name: "VMware | Create VM shutdown script and service"
   ansible.builtin.template:
-    src: "{{ role_path }}/files/vmware-shutdown.service.j2"
-    dest: "/etc/systemd/system/vmware-shutdown.service"
-    mode: "0644"
-    owner: "root"
-    group: "root"
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "{{ item.mode }}"
+    owner: root
+    group: root
+  loop:
+    - {
+        src: "{{ role_path }}/files/vmware-shutdown.sh",
+        dest: "/usr/local/bin/vmware-shutdown.sh",
+        mode: "0755",
+      }
+    - {
+        src: "{{ role_path }}/files/vmware-shutdown.service.j2",
+        dest: "/etc/systemd/system/vmware-shutdown.service",
+        mode: "0644",
+      }
   become: true
 
 - name: "VMware | Enable VM shutdown service"
