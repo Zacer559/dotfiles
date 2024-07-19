@@ -1,0 +1,29 @@
+---
+- name: "Lutris | {{ ansible_distribution }} | Install wine"
+  ansible.builtin.pacman:
+    name: "wine"
+    state: present
+  become: true
+
+- name: "Lutris | {{ ansible_distribution }} | Install packages"
+  ansible.builtin.pacman:
+    name:
+      - wine
+      - vulkan-tools
+      - vkd3d
+      - flatpak
+    state: present
+  become: true
+
+- name: "Lutris | {{ ansible_distribution }} | Ensure Flathub repository is enabled"
+  community.general.flatpak_remote:
+    name: flathub
+    state: present
+    flatpakrepo_url: https://flathub.org/repo/flathub.flatpakrepo
+  become: true
+
+- name: "Lutris | {{ ansible_distribution }} | Install Lutris via Flatpak"
+  community.general.flatpak:
+    name: net.lutris.Lutris
+    state: present
+  become: true
