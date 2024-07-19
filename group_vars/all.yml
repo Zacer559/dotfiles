@@ -202,3 +202,5 @@ nvim_env_name: "nvim-python"
 nvim_python_version: "3.12"
 
 timeshift_config_file: "/etc/timeshift/timeshift.json"
+
+waybar_config_dir: "{{ ansible_user_dir }}/.config/waybar"

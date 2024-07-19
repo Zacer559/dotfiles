@@ -10,24 +10,25 @@
 
 - name: "Waybar | Check if config folder is a symlink"
   ansible.builtin.stat:
-    path: "{{ ansible_user_dir }}/.config/waybar"
+    path: "{{ waybar_config_dir }}"
   register: waybar_config_stat
 
 - name: "Waybar | Remove existing config folder if not a symlink"
   ansible.builtin.file:
-    path: "{{ ansible_user_dir }}/.config/waybar"
+    path: "{{ waybar_config_dir }}"
     state: absent
-  when: not waybar_config_stat.stat.islnk
+  when: waybar_config_stat.stat.exists and not waybar_config_stat.stat.islnk
 
 - name: "Waybar | Config folder"
   ansible.builtin.file:
     mode: "0755"
-    path: "{{ ansible_user_dir }}/.config/waybar"
+    path: "{{ waybar_config_dir }}"
+
     state: directory
 
 - name: "Waybar | Create symlink to role files directory"
   ansible.builtin.file:
     src: "{{ role_path }}/files"
-    dest: "{{ ansible_user_dir }}/.config/waybar"
+    dest: "{{ waybar_config_dir }}"
     state: link
     force: true
