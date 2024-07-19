@@ -4,6 +4,7 @@
 
 - name: "Python | Initialize conda environment and setup zsh"
   ansible.builtin.shell: |
+    set -o pipefail
     source {{ conda_bin_path }} root
   args:
     executable: /bin/bash
@@ -15,30 +16,24 @@
     regexp: "{{ item.regexp }}"
     line: "{{ item.line }}"
     create: true
+    mode: "0644"
   loop:
-    - {
-        path: "{{ zshrc_path }}",
-        regexp: "^export CURL_CA_BUNDLE=",
-        line: "export CURL_CA_BUNDLE={{ ca_bundle_path }}",
-      }
-    - {
-        path: "{{ bashrc_path }}",
-        regexp: "^export CURL_CA_BUNDLE=",
-        line: "export CURL_CA_BUNDLE={{ ca_bundle_path }}",
-      }
-    - {
-        path: "{{ zshrc_path }}",
-        regexp: "^export CRYPTOGRAPHY_OPENSSL_NO_LEGACY=",
-        line: "export CRYPTOGRAPHY_OPENSSL_NO_LEGACY={{ cryptography_legacy }}",
-      }
-    - {
-        path: "{{ bashrc_path }}",
-        regexp: "^export CRYPTOGRAPHY_OPENSSL_NO_LEGACY=",
-        line: "export CRYPTOGRAPHY_OPENSSL_NO_LEGACY={{ cryptography_legacy }}",
-      }
+    - path: "{{ zshrc_path }}"
+      regexp: "^export CURL_CA_BUNDLE="
+      line: "export CURL_CA_BUNDLE={{ ca_bundle_path }}"
+    - path: "{{ bashrc_path }}"
+      regexp: "^export CURL_CA_BUNDLE="
+      line: "export CURL_CA_BUNDLE={{ ca_bundle_path }}"
+    - path: "{{ zshrc_path }}"
+      regexp: "^export CRYPTOGRAPHY_OPENSSL_NO_LEGACY="
+      line: "export CRYPTOGRAPHY_OPENSSL_NO_LEGACY={{ cryptography_legacy }}"
+    - path: "{{ bashrc_path }}"
+      regexp: "^export CRYPTOGRAPHY_OPENSSL_NO_LEGACY="
+      line: "export CRYPTOGRAPHY_OPENSSL_NO_LEGACY={{ cryptography_legacy }}"
 
 - name: "Python | Check if pyinstaller is already installed"
   ansible.builtin.shell: |
+    set -o pipefail
     source {{ conda_bin_path }} root
     conda list | grep pyinstaller
   register: pyinstaller_check
@@ -50,15 +45,19 @@
 - name: "Python | Install pyinstaller in conda environment"
   become: true
   ansible.builtin.shell: |
+    set -o pipefail
     source {{ conda_bin_path }} root
     export CRYPTOGRAPHY_OPENSSL_NO_LEGACY={{ cryptography_legacy }}
     conda install -y pyinstaller
   args:
     executable: /bin/bash
   when: pyinstaller_check.rc == 1
+  register: pyinstaller_install
+  changed_when: pyinstaller_install.rc == 0
 
 - name: "Python | Check if Neovim Python provider environment exists"
   ansible.builtin.shell: |
+    set -o pipefail
     source {{ conda_bin_path }} root
     conda env list | grep {{ nvim_env_name }}
   register: conda_env_check
@@ -73,6 +72,8 @@
   args:
     executable: /bin/bash
   when: conda_env_check.rc == 1
+  register: conda_env_create
+  changed_when: conda_env_create.rc == 0
 
 - name: "Python | Install pip in Neovim Python provider environment"
   ansible.builtin.shell: |
@@ -81,9 +82,12 @@
   args:
     executable: /bin/bash
   when: conda_env_check.rc == 1
+  register: pip_install
+  changed_when: pip_install.rc == 0
 
 - name: "Python | Determine the path of the Neovim Python provider environment"
   ansible.builtin.shell: |
+    set -o pipefail
     conda info --envs | grep {{ nvim_env_name }} | awk '{print $NF}'
   register: nvim_env_path
   changed_when: false
