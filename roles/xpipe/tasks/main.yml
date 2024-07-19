@@ -10,24 +10,24 @@
 
 - name: "Xpipe | Check if config folder is a symlink"
   ansible.builtin.stat:
-    path: "{{ ansible_user_dir }}/.xpipe/settings"
+    path: "{{ xpipe_config_path }}"
   register: xpipe_config_stat
 
 - name: "Xpipe | Remove existing config folder if not a symlink"
   ansible.builtin.file:
-    path: "{{ ansible_user_dir }}/.xpipe/settings"
+    path: "{{ xpipe_config_path }}"
     state: absent
   when: xpipe_config_stat.stat.exists and not xpipe_config_stat.stat.islnk
 
 - name: "Xpipe | Config folder"
   ansible.builtin.file:
     mode: "0755"
-    path: "{{ ansible_user_dir }}/.xpipe/settings"
+    path: "{{ xpipe_config_path }}"
     state: directory
 
 - name: "Xpipe | Create symlink to role files directory"
   ansible.builtin.file:
     src: "{{ role_path }}/files"
-    dest: "{{ ansible_user_dir }}/.xpipe/settings"
+    dest: "{{ xpipe_config_path }}"
     state: link
     force: true
