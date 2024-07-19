@@ -6,22 +6,24 @@ source "$(dirname "$0")/os_setup.sh"
 
 # Main setup function
 main() {
-  check_vault_secret
   parse_arguments "$@"
-  detect_and_setup_os
-  setup_ssh_keys
-  clone_or_update_repository
-  run_ansible_playbook
-  handle_first_run
+  get_roles_to_run
+  display_summary
+  confirm_and_run
 }
 
 # Parse command-line arguments
 parse_arguments() {
+  EXCLUDE_MODE=false
+  ROLES_LIST=()
   while [[ "$#" -gt 0 ]]; do
     case $1 in
     -r | --roles)
       IFS=',' read -r -a ROLES_LIST <<<"$2"
       shift
+      ;;
+    -e | --exclude)
+      EXCLUDE_MODE=true
       ;;
     -h | --help)
       usage
@@ -35,6 +37,57 @@ parse_arguments() {
     esac
     shift
   done
+}
+
+# Get roles to run
+get_roles_to_run() {
+  if [[ "$EXCLUDE_MODE" = true ]]; then
+    local default_roles=($(get_default_roles))
+    echo "Available roles:"
+    print_numbered_roles "${default_roles[@]}"
+    echo
+    read -p "Enter the numbers of roles to exclude (separated by spaces): " numbers
+    local excluded_indices=($numbers)
+    for i in "${!default_roles[@]}"; do
+      if ! [[ " ${excluded_indices[@]} " =~ " $((i + 1)) " ]]; then
+        ROLES_LIST+=("${default_roles[i]}")
+      fi
+    done
+  elif [[ ${#ROLES_LIST[@]} -eq 0 ]]; then
+    ROLES_LIST=($(get_default_roles))
+  fi
+}
+
+# Display summary of actions
+display_summary() {
+  echo "The following roles will be executed:"
+  for role in "${ROLES_LIST[@]}"; do
+    echo "  - $role"
+  done
+  echo
+}
+
+# Confirm and run
+confirm_and_run() {
+  read -p "Do you want to proceed? (y/n): " -n 1 -r
+  echo
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    run_setup
+  else
+    echo "Operation cancelled."
+    exit 0
+  fi
+}
+
+# Run setup
+run_setup() {
+
+  check_vault_secret
+  detect_and_setup_os
+  setup_ssh_keys
+  clone_or_update_repository
+  run_ansible_playbook
+  handle_first_run
 }
 
 # Setup SSH keys
@@ -63,7 +116,6 @@ clone_or_update_repository() {
   popd >/dev/null 2>&1
 }
 
-# Run Ansible playbook
 run_ansible_playbook() {
   _task "Running playbook"
   _task_done
@@ -74,15 +126,20 @@ run_ansible_playbook() {
     playbook_command="$playbook_command --vault-password-file $VAULT_SECRET"
   fi
 
-  if [[ ${#ROLES_LIST[@]} -gt 0 ]]; then
-    playbook_command="$playbook_command -e roles_list=${ROLES_LIST[*]}"
-  fi
+  # Convert ROLES_LIST array to a comma-separated string
+  local roles_string=$(
+    IFS=,
+    echo "${ROLES_LIST[*]}"
+  )
+
+  playbook_command="$playbook_command -e 'roles_list=[${roles_string}]'"
   playbook_command="$playbook_command $DOTFILES_DIR/main.yml"
-  $playbook_command
+
+  echo "Executing: $playbook_command"
+  eval $playbook_command
 
   popd >/dev/null 2>&1
 }
-
 # Handle first run
 handle_first_run() {
   if [[ ! -f "$IS_FIRST_RUN" ]]; then

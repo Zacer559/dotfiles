@@ -59,10 +59,12 @@ function print_error {
 function print_success {
   printf "%b %b%s%b\n" "$CHECK_MARK" "$GREEN" "$1" "$NC"
 }
+
 # Function to print warning messages
 function print_warning {
   printf "%b %b%s%b\n" "$WARNING" "$YELLOW" "$1" "$NC"
 }
+
 # Function to print info messages
 function print_info {
   printf "%b %b%s%b\n" "$ARROW" "$CYAN" "$1" "$NC"
@@ -70,10 +72,11 @@ function print_info {
 
 # Usage function
 function usage {
-  echo "Usage: $0 [-r role1,role2,...] [--roles role1,role2,...] [-h] [--help]"
+  echo "Usage: $0 [-r role1,role2,...] [--roles role1,role2,...] [-e] [--exclude] [-h] [--help]"
   echo
   echo "Options:"
   echo "  -r, --roles    Specify the roles to run, separated by commas"
+  echo "  -e, --exclude  Exclude roles from the default list"
   echo "  -h, --help     Display this help message"
 }
 
@@ -87,6 +90,36 @@ function update_ansible_galaxy {
     os_requirements="$DOTFILES_DIR/requirements/$os.yml"
   fi
   _cmd "ansible-galaxy install -r $DOTFILES_DIR/requirements/common.yml $os_requirements"
+}
+
+# Function to get default roles
+# Function to get default roles
+function get_default_roles {
+  sed -n '/^default_roles:/,/^[^ ]/p' "$GROUP_VARS_FILE" | grep '^  - ' | sed 's/^  - //'
+}
+
+# Function to print roles with numbers
+function print_numbered_roles {
+  local roles=("$@")
+  for i in "${!roles[@]}"; do
+    printf "%2d. %s\n" $((i + 1)) "${roles[i]}"
+  done
+}
+
+# Function to get roles to exclude
+function get_roles_to_exclude {
+  local all_roles=("$@")
+  echo "Available roles:"
+  print_numbered_roles "${all_roles[@]}"
+  echo
+  read -p "Enter the numbers of roles to exclude (separated by spaces): " numbers
+  local excluded_roles=()
+  for num in $numbers; do
+    if [[ $num =~ ^[0-9]+$ ]] && [ $num -ge 1 ] && [ $num -le ${#all_roles[@]} ]; then
+      excluded_roles+=("${all_roles[$((num - 1))]}")
+    fi
+  done
+  printf '%s\n' "${excluded_roles[@]}"
 }
 
 # Check if VAULT_SECRET exists, is not empty, and can correctly decrypt existing variables
