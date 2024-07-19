@@ -2,4 +2,4 @@
 - name: "Whatsapp | {{ ansible_distribution }} | Install whatsapp-for-linux"
   kewlfft.aur.aur:
     name: "whatsapp-for-linux"
-    state: present 
+    state: present
