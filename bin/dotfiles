@@ -102,10 +102,12 @@ display_summary() {
   local available_roles
   mapfile -t available_roles < <(get_default_roles)
   echo "The following roles will be executed:"
+  local max_index=${#available_roles[@]}
+  local padding_width=${#max_index}
   for role in "${ROLES_LIST[@]}"; do
     local role_number
     role_number=$(printf '%s\n' "${available_roles[@]}" | grep -n "^${role}$" | cut -d: -f1)
-    echo "  $role_number. $role"
+    printf "%${padding_width}d. %s\n" "$role_number" "$role"
   done
   echo
 }
