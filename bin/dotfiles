@@ -15,12 +15,16 @@ main() {
 # Parse command-line arguments
 parse_arguments() {
   EXCLUDE_MODE=false
+  SELECT_MODE=false
   ROLES_LIST=()
   while [[ "$#" -gt 0 ]]; do
     case $1 in
     -r | --roles)
       IFS=',' read -r -a ROLES_LIST <<<"$2"
       shift
+      ;;
+    -s | --select)
+      SELECT_MODE=true
       ;;
     -e | --exclude)
       EXCLUDE_MODE=true
@@ -39,37 +43,76 @@ parse_arguments() {
   done
 }
 
+# Check if specified roles exist
+check_roles_exist() {
+  local available_roles
+  mapfile -t available_roles < <(get_default_roles)
+  local invalid_roles=()
+  for role in "${ROLES_LIST[@]}"; do
+    if ! printf '%s\n' "${available_roles[@]}" | grep -q "^${role}$"; then
+      invalid_roles+=("$role")
+    fi
+  done
+  if [ ${#invalid_roles[@]} -ne 0 ]; then
+    print_error "The following roles do not exist:"
+    for role in "${invalid_roles[@]}"; do
+      echo "  - $role"
+    done
+    exit 1
+  fi
+}
+
 # Get roles to run
 get_roles_to_run() {
-  if [[ "$EXCLUDE_MODE" = true ]]; then
-    local default_roles=($(get_default_roles))
+  local available_roles
+  mapfile -t available_roles < <(get_default_roles)
+  if [ ${#ROLES_LIST[@]} -ne 0 ]; then
+    check_roles_exist
+  elif [[ "$SELECT_MODE" = true ]]; then
     echo "Available roles:"
-    print_numbered_roles "${default_roles[@]}"
+    print_numbered_roles "${available_roles[@]}"
     echo
-    read -p "Enter the numbers of roles to exclude (separated by spaces): " numbers
-    local excluded_indices=($numbers)
-    for i in "${!default_roles[@]}"; do
-      if ! [[ " ${excluded_indices[@]} " =~ " $((i + 1)) " ]]; then
-        ROLES_LIST+=("${default_roles[i]}")
+    read -r -p "Enter the numbers of roles to include (separated by spaces): " numbers
+    local selected_indices
+    read -ra selected_indices <<<"$numbers"
+    for i in "${selected_indices[@]}"; do
+      if [[ $i =~ ^[0-9]+$ ]] && [ "$i" -ge 1 ] && [ "$i" -le ${#available_roles[@]} ]; then
+        ROLES_LIST+=("${available_roles[$((i - 1))]}")
       fi
     done
-  elif [[ ${#ROLES_LIST[@]} -eq 0 ]]; then
-    ROLES_LIST=($(get_default_roles))
+  elif [[ "$EXCLUDE_MODE" = true ]]; then
+    echo "Available roles:"
+    print_numbered_roles "${available_roles[@]}"
+    echo
+    read -r -p "Enter the numbers of roles to exclude (separated by spaces): " numbers
+    local excluded_indices
+    read -ra excluded_indices <<<"$numbers"
+    for i in "${!available_roles[@]}"; do
+      if ! printf '%s\n' "${excluded_indices[@]}" | grep -q "^$((i + 1))$"; then
+        ROLES_LIST+=("${available_roles[i]}")
+      fi
+    done
+  else
+    mapfile -t ROLES_LIST < <(get_default_roles)
   fi
 }
 
 # Display summary of actions
 display_summary() {
+  local available_roles
+  mapfile -t available_roles < <(get_default_roles)
   echo "The following roles will be executed:"
   for role in "${ROLES_LIST[@]}"; do
-    echo "  - $role"
+    local role_number
+    role_number=$(printf '%s\n' "${available_roles[@]}" | grep -n "^${role}$" | cut -d: -f1)
+    echo "  $role_number. $role"
   done
   echo
 }
 
 # Confirm and run
 confirm_and_run() {
-  read -p "Do you want to proceed? (y/n): " -n 1 -r
+  read -r -p "Do you want to proceed? (y/n): " -n 1 -r
   echo
   if [[ $REPLY =~ ^[Yy]$ ]]; then
     run_setup
@@ -81,7 +124,6 @@ confirm_and_run() {
 
 # Run setup
 run_setup() {
-
   check_vault_secret
   detect_and_setup_os
   setup_ssh_keys
@@ -111,15 +153,15 @@ clone_or_update_repository() {
     _cmd "git -C $DOTFILES_DIR pull --quiet"
   fi
 
-  pushd "$DOTFILES_DIR" >/dev/null 2>&1
+  pushd "$DOTFILES_DIR" >/dev/null 2>&1 || exit
   update_ansible_galaxy "$ID"
-  popd >/dev/null 2>&1
+  popd >/dev/null 2>&1 || exit
 }
 
 run_ansible_playbook() {
   _task "Running playbook"
   _task_done
-  pushd "$DOTFILES_DIR" >/dev/null 2>&1
+  pushd "$DOTFILES_DIR" >/dev/null 2>&1 || exit
   local playbook_command="ansible-playbook -i $INVENTORY_FILE"
 
   if [[ -f "$VAULT_SECRET" ]]; then
@@ -127,19 +169,19 @@ run_ansible_playbook() {
   fi
 
   # Convert ROLES_LIST array to a comma-separated string
-  local roles_string=$(
-    IFS=,
-    echo "${ROLES_LIST[*]}"
-  )
+  local roles_string
+  printf -v roles_string '%s,' "${ROLES_LIST[@]}"
+  roles_string=${roles_string%,}
 
-  playbook_command="$playbook_command -e 'roles_list=[${roles_string}]'"
+  playbook_command="$playbook_command -e 'roles_list=[\"${roles_string}\"]'"
   playbook_command="$playbook_command $DOTFILES_DIR/main.yml"
 
   echo "Executing: $playbook_command"
-  eval $playbook_command
+  eval "$playbook_command"
 
-  popd >/dev/null 2>&1
+  popd >/dev/null 2>&1 || exit
 }
+
 # Handle first run
 handle_first_run() {
   if [[ ! -f "$IS_FIRST_RUN" ]]; then

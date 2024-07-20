@@ -112,10 +112,10 @@ function get_roles_to_exclude {
   echo "Available roles:"
   print_numbered_roles "${all_roles[@]}"
   echo
-  read -p "Enter the numbers of roles to exclude (separated by spaces): " numbers
+  read -r -p "Enter the numbers of roles to exclude (separated by spaces): " numbers
   local excluded_roles=()
   for num in $numbers; do
-    if [[ $num =~ ^[0-9]+$ ]] && [ $num -ge 1 ] && [ $num -le ${#all_roles[@]} ]; then
+    if [[ $num =~ ^[0-9]+$ ]] && [ "$num" -ge 1 ] && [ "$num" -le ${#all_roles[@]} ]; then
       excluded_roles+=("${all_roles[$((num - 1))]}")
     fi
   done
