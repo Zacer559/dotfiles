@@ -1,0 +1,9 @@
+---
+- name: "Hyprland | {{ ansible_distribution }} | Install grimblast "
+  kewlfft.aur.aur:
+    name: "grimblast"
+    state: present
+- name: "Hyprland | {{ ansible_distribution }} | Install hyprpicker "
+  kewlfft.aur.aur:
+    name: "hyprpicker"
+    state: present
