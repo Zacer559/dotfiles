@@ -41,7 +41,7 @@
 
     - name: Process roles list
       ansible.builtin.set_fact:
-        processed_roles: "{{ roles_list.strip('[]').split(',') | map('trim') | list }}"
+        processed_roles: '{{ roles_list | trim | replace(''['', '''') | replace('']'', '''') | split('','') | map(''trim'') | map(''regex_replace'', ''^"'', '''') | map(''regex_replace'', ''"$'', '''') | list }}'
       tags:
         - always
 
