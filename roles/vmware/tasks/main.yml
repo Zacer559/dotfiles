@@ -87,7 +87,7 @@
 
 - name: "VMware | Set permissions for specific files"
   ansible.builtin.file:
-    path: "{{ item }}"
+    path: "{{ file_item }}"
     mode: "0644"
   loop:
     - "{{ vmware_etc_path }}/vmnet1/dhcpd/dhcpd.leases"
@@ -96,33 +96,39 @@
     - "{{ vmware_etc_path }}/vmnet8/dhcpd/dhcpd.leases~"
     - "{{ vmware_config_path }}/preferences"
     - "{{ vmware_config_path }}/preferences.save"
+  loop_control:
+    loop_var: file_item
   become: true
 
 - name: "VMware | Enable VMware services"
   ansible.builtin.systemd:
-    name: "{{ item }}"
+    name: "{{ service_item }}"
     enabled: true
   loop:
     - vmware-networks.service
     - vmware-usbarbitrator.service
     - vmware-networks.path
     - vmware-usbarbitrator.path
+  loop_control:
+    loop_var: service_item
   become: true
 
 - name: "VMware | Start VMware services"
   ansible.builtin.systemd:
-    name: "{{ item }}"
+    name: "{{ start_service_item }}"
     state: started
   loop:
     - vmware-networks.service
     - vmware-usbarbitrator.service
+  loop_control:
+    loop_var: start_service_item
   become: true
 
 - name: "VMware | Create VM shutdown script and service"
   ansible.builtin.template:
-    src: "{{ item.src }}"
-    dest: "{{ item.dest }}"
-    mode: "{{ item.mode }}"
+    src: "{{ template_item.src }}"
+    dest: "{{ template_item.dest }}"
+    mode: "{{ template_item.mode }}"
     owner: root
     group: root
   loop:
@@ -136,6 +142,8 @@
         dest: "/etc/systemd/system/vmware-shutdown.service",
         mode: "0644",
       }
+  loop_control:
+    loop_var: template_item
   become: true
 
 - name: "VMware | Enable VM shutdown service"
