@@ -12,6 +12,7 @@
       - vulkan-tools
       - vkd3d
       - flatpak
+      - mangohud
     state: present
   become: true
 
