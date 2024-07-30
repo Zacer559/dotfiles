@@ -1,0 +1,8 @@
+---
+- name: "LibreOffice | {{ ansible_distribution }} | Install libreoffice"
+  ansible.builtin.pacman:
+    name:
+      - "libreoffice-fresh"
+      - "libreoffice-fresh-pl"
+    state: present
+  become: true
