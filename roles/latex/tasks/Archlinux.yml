@@ -15,3 +15,13 @@
   kewlfft.aur.aur:
     name: "zathura-pdf-poppler"
     state: present
+- name: "Latex | {{ ansible_distribution }} | Install texlive-fontsextra"
+  ansible.builtin.pacman:
+    name: "texlive-fontsextra"
+    state: present
+  become: true
+- name: "Latex | {{ ansible_distribution }} | Install texlive-xetex"
+  ansible.builtin.pacman:
+    name: "texlive-xetex"
+    state: present
+  become: true
