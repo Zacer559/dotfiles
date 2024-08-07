@@ -22,6 +22,12 @@
   become: true
 - name: "Latex | {{ ansible_distribution }} | Install texlive-xetex"
   ansible.builtin.pacman:
-    name: "texlive-xetex"
+    name:
+      - "texlive-xetex"
+      - "texlive-latexextra"
+      - "texlive-bibtexextra"
+      - "texlive-fontsrecommended"
+      - "texlive-langpolish"
+      - "texlive-langenglish"
     state: present
   become: true
