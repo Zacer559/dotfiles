@@ -64,7 +64,12 @@
       - lib32-gst-plugins-base-libs
       - directx-headers
       - lib32-vkd3d
+      - opencl-clhpp
+      - opencl-headers
+      - opencl-nvidia
       - lutris
+      - lib32-opencl-nvidia
+      - lib32-vulkan-validation-layers
       - wine-mono
     state: present
   become: true
@@ -76,5 +81,6 @@
     use: yay
     name:
       - dxvk-bin
+      - heroic-games-launcher-bin
       - vkd3d-proton-bin
     state: present
