@@ -1,0 +1,6 @@
+---
+- name: "OBS | {{ ansible_distribution }} | Install obs-studio"
+  ansible.builtin.pacman:
+    name: "obs-studio"
+    state: present
+  become: true
