@@ -1,0 +1,61 @@
+---
+# GTK 3.0 Configuration
+- name: "GTK 3.0 | Run Tasks: {{ ansible_distribution }}"
+  ansible.builtin.include_tasks: "{{ ansible_distribution }}.yml"
+
+# Manage bookmarks file
+- name: "GTK 3.0 | Check if bookmarks file is a Symlink"
+  ansible.builtin.stat:
+    path: "~/.config/gtk-3.0/bookmarks"
+  register: bookmarks_stat
+
+- name: "GTK 3.0 | Remove Existing bookmarks file if Not a Symlink"
+  ansible.builtin.file:
+    path: "~/.config/gtk-3.0/bookmarks"
+    state: absent
+  when: bookmarks_stat.stat.exists and not bookmarks_stat.stat.islnk
+
+- name: "GTK 3.0 | Ensure role path directory exists"
+  ansible.builtin.file:
+    path: "{{ role_path }}/files"
+    state: directory
+    mode: "0755"
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
+
+- name: "GTK 3.0 | Create Symlink for bookmarks file"
+  ansible.builtin.file:
+    src: "{{ role_path }}/files/bookmarks"
+    dest: "~/.config/gtk-3.0/bookmarks"
+    state: link
+    force: true
+
+# Manage settings.ini file
+- name: "GTK 3.0 | Check if settings.ini file is a Symlink"
+  ansible.builtin.stat:
+    path: "~/.config/gtk-3.0/settings.ini"
+  register: settings_stat
+
+- name: "GTK 3.0 | Remove Existing settings.ini file if Not a Symlink"
+  ansible.builtin.file:
+    path: "~/.config/gtk-3.0/settings.ini"
+    state: absent
+  when: settings_stat.stat.exists and not settings_stat.stat.islnk
+
+- name: "GTK 3.0 | Create Symlink for settings.ini file"
+  ansible.builtin.file:
+    src: "{{ role_path }}/files/settings.ini"
+    dest: "~/.config/gtk-3.0/settings.ini"
+    state: link
+    force: true
+
+# Set correct permissions
+- name: "GTK 3.0 | Set Correct Permissions for GTK 3.0 config files"
+  ansible.builtin.file:
+    path: "~/.config/gtk-3.0/{{ gtk_config_file }}"
+    mode: "0644"
+  loop:
+    - bookmarks
+    - settings.ini
+  loop_control:
+    loop_var: gtk_config_file
