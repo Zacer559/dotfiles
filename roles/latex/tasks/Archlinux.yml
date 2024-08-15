@@ -29,5 +29,6 @@
       - "texlive-fontsrecommended"
       - "texlive-langpolish"
       - "texlive-langenglish"
+      - "texlive-mathscience"
     state: present
   become: true
