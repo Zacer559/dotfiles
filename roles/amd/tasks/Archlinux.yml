@@ -13,5 +13,7 @@
 
 - name: "AMD | {{ ansible_distribution }} | Install amdgpu_top from AUR"
   kewlfft.aur.aur:
-    name: amdgpu_top
+    name:
+      - amdgpu_top
+      - lact
     state: present
