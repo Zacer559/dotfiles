@@ -5,3 +5,10 @@
 # apologize.   Seriously, though - don't ask.
 # The format of this file is documented in the dhcpd.leases(5) manual page.
 
+lease 192.168.66.128 {
+	starts 0 2024/08/18 09:13:53;
+	ends 0 2024/08/18 09:43:53;
+	hardware ethernet 00:0c:29:38:03:62;
+	uid 01:00:0c:29:38:03:62;
+	client-hostname "WinDev2407Eval";
+}
