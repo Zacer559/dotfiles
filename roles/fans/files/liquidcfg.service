@@ -1,0 +1,12 @@
+[Unit]
+Description=Liquidctl configuration service
+After=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStart=liquidctl initialize all
+ExecStart=liquidctl --match Obsidian set sync speed 18 10 22 20 25 30 30 50
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,39 @@
+---
+- name: "Fans | Run Tasks: {{ ansible_distribution }}"
+  ansible.builtin.include_tasks: "{{ ansible_distribution }}.yml"
+
+- name: "Liquidctl | Check if /etc/systemd/system/liquidcfg.service is a symlink"
+  ansible.builtin.stat:
+    path: "/etc/systemd/system/liquidcfg.service"
+  register: liquidctl_service_stat
+
+- name: "Liquidctl | Remove existing /etc/systemd/system/liquidcfg.service if not a symlink"
+  ansible.builtin.file:
+    path: "/etc/systemd/system/liquidcfg.service"
+    state: absent
+  when: liquidctl_service_stat.stat.exists and not liquidctl_service_stat.stat.islnk
+  become: true
+
+- name: "Liquidctl | Create symlink to role files directory"
+  ansible.builtin.file:
+    src: "{{ role_path }}/files/liquidcfg.service"
+    dest: "/etc/systemd/system/liquidcfg.service"
+    state: link
+    force: true
+  become: true
+
+- name: "Liquidctl | Set correct permissions for /etc/systemd/system/liquidcfg.service"
+  ansible.builtin.file:
+    path: "/etc/systemd/system/liquidcfg.service"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  become: true
+
+- name: "Liquidctl | Enable and start liquidcfg service"
+  ansible.builtin.systemd:
+    name: liquidcfg
+    enabled: true
+    state: started
+    daemon_reload: true
+  become: true

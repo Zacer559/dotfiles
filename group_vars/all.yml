@@ -23,13 +23,13 @@ default_roles:
   - mpv
   - gimp
   - atuin
-  - fancontrol
   - timeshift
   - lutris
   - libreoffice
   - obs
   - gtk
   - amd
+  - fans
 # Github
 git_user_name: "Zacer559"
 git_user_email: !vault |

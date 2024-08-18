@@ -1,0 +1,6 @@
+---
+- name: "Fans | {{ ansible_distribution }} | Install liquidctl"
+  ansible.builtin.pacman:
+    name: "liquidctl"
+    state: present
+  become: true
