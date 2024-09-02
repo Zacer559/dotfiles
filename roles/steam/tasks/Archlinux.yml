@@ -5,3 +5,9 @@
     name:
       - steam
     state: present
+
+- name: "Steam | {{ ansible_distribution }} | Install xone (xbox controller)"
+  kewlfft.aur.aur:
+    name:
+      - xone-dkms-git
+    state: present
