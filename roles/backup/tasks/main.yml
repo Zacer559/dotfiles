@@ -1,0 +1,94 @@
+---
+- name: "Btrbk | Run Tasks: {{ ansible_distribution }}"
+  ansible.builtin.include_tasks: "{{ ansible_distribution }}.yml"
+
+- name: Btrbk | Create snapshots directory
+  file:
+    path: /snapshots
+    state: directory
+    mode: "0755"
+  become: true
+
+- name: Btrkbk | Create backup subvolumes
+  command: "btrfs subvolume create /mnt/veracrypt2/@{{ subvol_name }}_backup"
+  loop:
+    - root
+    - home
+  loop_control:
+    loop_var: subvol_name
+  register: create_subvol_result
+  failed_when:
+    - create_subvol_result.rc != 0
+    - "'File exists' not in create_subvol_result.stderr"
+  become: true
+
+- name: Btrbk | Create btrbk config directory
+  file:
+    path: /etc/btrbk
+    state: directory
+    mode: "0755"
+
+- name: Btrbk | Check if btrbk config is a Symlink
+  ansible.builtin.stat:
+    path: "{{ btrbk_config_file }}"
+  register: btrbk_config_stat
+
+- name: Btrbk | Remove Existing btrbk config if Not a Symlink
+  ansible.builtin.file:
+    path: "{{ btrbk_config_file }}"
+    state: absent
+  when: btrbk_config_stat.stat.exists and not btrbk_config_stat.stat.islnk
+
+- name: Btrbk | Ensure role path directory exists
+  ansible.builtin.file:
+    path: "{{ role_path }}/files"
+    state: directory
+
+- name: Btrbk | Create Symlink to Role Files Directory
+  ansible.builtin.file:
+    src: "{{ role_path }}/files/btrbk.conf"
+    dest: "{{ btrbk_config_file }}"
+    state: link
+    force: true
+  become: true
+
+- name: Btrbk | Set Correct Permissions for btrbk config
+  ansible.builtin.file:
+    path: "{{ btrbk_config_file }}"
+    owner: root
+    group: root
+    mode: "0755"
+  become: true
+
+- name: "Btrbk | Copy backup script to /usr/local/bin"
+  ansible.builtin.copy:
+    src: "{{ role_path }}/files/btrbk-backup.sh"
+    dest: "/usr/local/bin/btrbk-backup"
+    owner: root
+    group: root
+    mode: "0755"
+  become: true
+
+- name: "Btrbk | Create symbolic link for backup script"
+  ansible.builtin.file:
+    src: "/usr/local/bin/btrbk-backup"
+    dest: "/usr/bin/btrbk-backup"
+    state: link
+    force: true
+  become: true
+
+- name: Restic | Create repository directory
+  ansible.builtin.file:
+    path: "{{ restic_repository_path }}"
+    state: directory
+    mode: "0755"
+
+- name: Restic | Initialize restic repository
+  ansible.builtin.command: "restic init --repo {{ restic_repository_path }}"
+  environment:
+    RESTIC_PASSWORD: "{{ restic_password }}"
+  register: init_result
+  failed_when:
+    - init_result.rc != 0
+    - '"repository already initialized" not in init_result.stderr'
+  changed_when: init_result.rc == 0
