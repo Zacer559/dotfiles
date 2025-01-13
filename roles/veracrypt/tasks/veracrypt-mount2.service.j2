@@ -1,0 +1,13 @@
+[Unit]
+Description=Mount VeraCrypt Volume 2
+After=default.target
+
+[Service]
+Type=oneshot
+ExecStartPre=/bin/sh -c '[ -e /dev/sde ] || exit 0'
+ExecStart=/bin/sh -c 'sudo /usr/bin/veracrypt --text --mount /dev/sde /mnt/veracrypt2 --keyfiles="" --pim {{ veracrypt_pim }} --password {{ password }} --protect-hidden=no --verbose'
+ExecStop=/bin/sh -c 'if [ -e /dev/sde ]; then sudo /usr/bin/veracrypt --text --dismount /mnt/veracrypt2; fi'
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

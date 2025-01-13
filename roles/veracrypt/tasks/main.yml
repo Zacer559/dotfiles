@@ -24,17 +24,33 @@
     src: "{{ vault_secret_path }}"
   register: vault_secret_content
 
-- name: "Veracrypt | Create user systemd service for mounting Veracrypt volume"
+- name: "Veracrypt | Create service for mounting Veracrypt volume 1"
   ansible.builtin.template:
-    src: veracrypt-mount.service.j2
-    dest: "{{ lookup('env', 'HOME') }}/.config/systemd/user/veracrypt-mount.service"
+    src: veracrypt-mount1.service.j2
+    dest: "{{ lookup('env', 'HOME') }}/.config/systemd/user/veracrypt-mount1.service"
     mode: "0644"
   vars:
     password: "{{ vault_secret_content['content'] | b64decode | trim }}"
 
-- name: "Veracrypt | Manage user systemd service"
+- name: "Veracrypt | Create service for mounting Veracrypt volume 2"
+  ansible.builtin.template:
+    src: veracrypt-mount2.service.j2
+    dest: "{{ lookup('env', 'HOME') }}/.config/systemd/user/veracrypt-mount2.service"
+    mode: "0644"
+  vars:
+    password: "{{ vault_secret_content['content'] | b64decode | trim }}"
+
+- name: "Veracrypt | Start and enable service 1"
   ansible.builtin.systemd:
-    name: veracrypt-mount.service
+    name: veracrypt-mount1.service
+    scope: user
+    state: started
+    enabled: true
+    daemon_reload: true
+
+- name: "Veracrypt | Start and enable service 2"
+  ansible.builtin.systemd:
+    name: veracrypt-mount2.service
     scope: user
     state: started
     enabled: true
