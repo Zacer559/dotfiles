@@ -1,5 +1,5 @@
 ---
 - name: "Brave | {{ ansible_distribution }} | Install brave-beta-bin "
   kewlfft.aur.aur:
-    name: "brave-beta-bin"
+    name: "brave-bin"
     state: present
