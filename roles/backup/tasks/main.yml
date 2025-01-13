@@ -60,10 +60,12 @@
     mode: "0755"
   become: true
 
-- name: "Btrbk | Copy backup script to /usr/local/bin"
-  ansible.builtin.copy:
+- name: "Btrbk | Create symlink for backup script to /usr/local/bin"
+  ansible.builtin.file:
     src: "{{ role_path }}/files/btrbk-backup.sh"
     dest: "/usr/local/bin/btrbk-backup"
+    state: link
+    force: true
     owner: root
     group: root
     mode: "0755"
@@ -90,5 +92,7 @@
   register: init_result
   failed_when:
     - init_result.rc != 0
-    - '"repository already initialized" not in init_result.stderr'
-  changed_when: init_result.rc == 0
+    - '"config file already exists" not in init_result.stderr'
+  changed_when:
+    - init_result.rc == 0
+    - '"config file already exists" not in init_result.stderr'

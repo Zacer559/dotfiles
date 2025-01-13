@@ -12,6 +12,13 @@ RESTIC_SOURCE="/mnt/veracrypt1"
 # Function for cleanup
 cleanup() {
   echo "Performing cleanup..."
+
+  # Delete btrbk snapshots if they exist
+  if [ -d "$BTRFS_ROOT/$SNAP_DIR" ]; then
+    echo "Cleaning up btrbk snapshots..."
+    sudo find "$BTRFS_ROOT/$SNAP_DIR" -maxdepth 1 -name "@*" -exec sudo btrfs subvolume delete {} \;
+  fi
+
   if mountpoint -q "$BTRFS_ROOT"; then
     sudo umount "$BTRFS_ROOT"
   fi
@@ -46,11 +53,6 @@ echo "Running btrbk backup..."
 sudo btrbk run
 
 echo "Running restic backup..."
-# Check if restic repository exists, initialize if it doesn't
-if ! restic -r "$RESTIC_REPO" snapshots >/dev/null 2>&1; then
-  echo "Initializing restic repository..."
-  restic -r "$RESTIC_REPO" init
-fi
 
 # Run restic backup with error handling
 if ! restic -r "$RESTIC_REPO" backup "$RESTIC_SOURCE"; then
