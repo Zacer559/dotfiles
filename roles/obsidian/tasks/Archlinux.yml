@@ -1,0 +1,6 @@
+---
+- name: "Obsidian | {{ ansible_distribution }} | Install obsidian"
+  ansible.builtin.pacman:
+    name:
+      - obsidian
+    state: present
