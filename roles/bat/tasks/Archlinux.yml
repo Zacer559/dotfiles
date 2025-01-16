@@ -1,0 +1,6 @@
+- name: "Bat | {{ ansible_distribution }} | Install Bat with pacman"
+  ansible.builtin.pacman:
+    name:
+      - bat
+    state: present
+  become: true
