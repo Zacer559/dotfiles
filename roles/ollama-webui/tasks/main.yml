@@ -1,5 +1,16 @@
 
-- name: Deploy Open WebUI with Docker Compose
+---
+- name: "Ollama WebUI | Check for distribution-specific setup: {{ ansible_distribution }}"
+  ansible.builtin.stat:
+    path: "{{ role_path }}/tasks/{{ ansible_distribution }}.yml"
+  register: webui_distro_config
+
+- name: "Ollama WebUI | Include distribution-specific tasks"
+  ansible.builtin.include_tasks: "{{ ansible_distribution }}.yml"
+  when: webui_distro_config.stat.exists
+
+- name: "Ollama WebUI | Start container service (generic)"
   ansible.builtin.command:
     cmd: docker-compose up -d
     chdir: "{{ role_path }}/files"
+  when: not webui_distro_config.stat.exists

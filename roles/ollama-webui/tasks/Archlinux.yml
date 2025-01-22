@@ -1,0 +1,3 @@
+---
+# Arch Linux specific configurations for Ollama WebUI
+# No special actions required - uses generic docker-compose setup
