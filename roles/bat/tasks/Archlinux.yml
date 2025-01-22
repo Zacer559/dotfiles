@@ -2,5 +2,6 @@
   ansible.builtin.pacman:
     name:
       - bat
+      - eza
     state: present
   become: true
