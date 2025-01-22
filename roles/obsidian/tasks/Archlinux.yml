@@ -4,3 +4,4 @@
     name:
       - obsidian
     state: present
+  become: true
