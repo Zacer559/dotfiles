@@ -20,6 +20,7 @@ default_roles:
   - java
   - waybar
   - docker
+  - ollama-webui
   - steam
   - mpv
   - gimp
