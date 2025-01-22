@@ -12,3 +12,25 @@
     regexp: "(^|:|^)~/.dotfiles/bin($|:)"
     line: 'export PATH="$PATH:$HOME/.dotfiles/bin"'
     create: true
+
+- name: "Shell | Add eza aliases to .zshrc"
+  ansible.builtin.blockinfile:
+    path: ~/.zshrc
+    marker: "# {mark} EZA ALIASES"
+    block: |
+      alias ls='eza --icons --color=auto --group-directories-first'
+      alias ll='eza --icons --color=auto --group-directories-first -l --git'
+      alias la='eza --icons --color=auto --group-directories-first -la --git'
+      alias lt='eza --icons --color=auto --group-directories-first --tree'
+    create: true
+
+- name: "Shell | Add eza aliases to .bashrc"
+  ansible.builtin.blockinfile:
+    path: ~/.bashrc
+    marker: "# {mark} EZA ALIASES"
+    block: |
+      alias ls='eza --icons --color=auto --group-directories-first'
+      alias ll='eza --icons --color=auto --group-directories-first -l --git'
+      alias la='eza --icons --color=auto --group-directories-first -la --git'
+      alias lt='eza --icons --color=auto --group-directories-first --tree'
+    create: true
