@@ -24,6 +24,12 @@
     name: docker
     state: present
 
+- name: Add current user to docker group
+  ansible.builtin.user:
+    name: "{{ ansible_user_id }}"
+    groups: docker
+    append: yes
+
 - name: Create new Docker data directory
   ansible.builtin.file:
     path: "{{ docker_data_root }}"
