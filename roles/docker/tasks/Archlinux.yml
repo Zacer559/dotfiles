@@ -77,3 +77,8 @@
     name: docker
     state: restarted
     enabled: yes
+
+- name: Start Portainer Agent container
+  ansible.builtin.command:
+    cmd: docker-compose -f "{{ role_path }}/files/portainer-agent/docker-compose.yml" up -d
+  become: true
