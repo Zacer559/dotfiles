@@ -214,6 +214,8 @@ zshrc_path: "~/.zshrc"
 bashrc_path: "~/.bashrc"
 ca_bundle_path: "/etc/ssl/certs/ca-certificates.crt"
 cryptography_legacy: "1"
+
+docker_data_root: "/home/zacer/Games/Docker"
 nvim_env_name: "nvim-python"
 nvim_python_version: "3.12"
 

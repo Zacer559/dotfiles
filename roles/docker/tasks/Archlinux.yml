@@ -1,5 +1,73 @@
 ---
-- name: "Docker | {{ ansible_distribution }} | Install docker-desktop"
-  kewlfft.aur.aur:
-    name: "docker-desktop"
+- name: "Docker | {{ ansible_distribution }} | Install docker packages"
+  ansible.builtin.pacman:
+    name:
+      - docker
+      - docker-compose
+      - docker-buildx
     state: present
+  become: true
+
+- name: Check for existing Docker data directory
+  ansible.builtin.stat:
+    path: /var/lib/docker
+  register: docker_data_stat
+
+- name: Ensure Docker is stopped before data transfer
+  ansible.builtin.systemd:
+    name: docker
+    state: stopped
+  when: docker_data_stat.stat.exists and docker_data_stat.stat.isdir and (docker_data_stat.stat.size > 0)
+
+- name: Ensure docker group exists
+  ansible.builtin.group:
+    name: docker
+    state: present
+
+- name: Create new Docker data directory
+  ansible.builtin.file:
+    path: "{{ docker_data_root }}"
+    state: directory
+    owner: "zacer"
+    group: "zacer"
+    mode: '0755'
+  become: true
+
+- name: Set docker group ownership
+  ansible.builtin.file:
+    path: "{{ docker_data_root }}"
+    group: docker
+    mode: '0775'
+
+  become: true
+
+- name: Transfer existing Docker data
+  ansible.builtin.synchronize:
+    src: /var/lib/docker/
+    dest: "{{ docker_data_root }}/"
+    recursive: yes
+    owner: yes
+    group: yes
+  when: docker_data_stat.stat.exists and docker_data_stat.stat.isdir and (docker_data_stat.stat.size > 0)
+  become: true
+  
+- name: Configure Docker daemon.json
+  ansible.builtin.template:
+    src: files/docker_daemon.json.j2
+    dest: /etc/docker/daemon.json
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+
+- name: Remove old Docker data directory
+  ansible.builtin.file:
+    path: /var/lib/docker
+    state: absent
+  become: true
+
+- name: Ensure Docker service is restarted
+  ansible.builtin.systemd:
+    name: docker
+    state: restarted
+    enabled: yes
