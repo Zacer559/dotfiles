@@ -31,3 +31,37 @@
     dest: "{{ ansible_user_dir }}/.config/nvim"
     state: link
     force: true
+
+- name: "Neovim | Create root symlink for sudo preservation"
+  ansible.builtin.file:
+    src: "{{ ansible_user_dir }}/.config/nvim"
+    dest: /root/.config/nvim
+    state: link
+    force: true
+  become: yes
+
+- name: "Neovim | Ensure root local share directory exists"
+  ansible.builtin.file:
+    path: /root/.local/share
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+  become: yes
+
+- name: "Neovim | Ensure user local share directory exists"
+  ansible.builtin.file:
+    path: "{{ ansible_user_dir }}/.local/share/nvim"
+    state: directory
+    mode: '0755'
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_gid }}"
+    recurse: yes
+
+- name: "Neovim | Create root plugin symlink"
+  ansible.builtin.file:
+    src: "{{ ansible_user_dir }}/.local/share/nvim"
+    dest: /root/.local/share/nvim
+    state: link
+    force: true
+  become: yes
