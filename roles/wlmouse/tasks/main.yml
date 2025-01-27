@@ -1,0 +1,55 @@
+---
+- name: Create udev rules directory if needed
+  file:
+    path: /etc/udev/rules.d/
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Get WLMouse USB device info
+  shell: lsusb | grep -i 'wlmouse'
+  register: lsusb_output
+  changed_when: false
+  
+- name: Extract vendor/product IDs
+  set_fact:
+    wlmouse_id_vendor: "{{ lsusb_output.stdout | regex_replace('.*ID\\s+([0-9a-f]{4})[ :]([0-9a-f]{4}).*', '\\1') | lower }}"
+    wlmouse_id_product: "{{ lsusb_output.stdout | regex_replace('.*ID\\s+([0-9a-f]{4})[ :]([0-9a-f]{4}).*', '\\2') | lower }}"
+  ignore_errors: yes
+  register: id_extract
+
+- name: Debug USB ID extraction
+  debug:
+    msg: "Extracted IDs - Vendor: {{ wlmouse_id_vendor }}, Product: {{ wlmouse_id_product }}"
+  when: id_extract is succeeded
+
+- name: Validate extracted IDs
+  assert:
+    that:
+      - wlmouse_id_vendor | length == 4
+      - wlmouse_id_product | length == 4
+      - wlmouse_id_vendor is regex('^[0-9a-f]{4}$')
+      - wlmouse_id_product is regex('^[0-9a-f]{4}$')
+    fail_msg: "Invalid USB ID format detected. Vendor: '{{ wlmouse_id_vendor }}' Product: '{{ wlmouse_id_product }}'"
+  when: id_extract is succeeded
+
+- name: Fail if IDs not extracted
+  fail:
+    msg: |-
+      Failed to extract USB IDs from lsusb output:
+      Raw output: {{ lsusb_output.stdout }}
+      Try manual extraction with: lsusb | grep -i wlmouse
+  when: id_extract is failed
+
+- name: Deploy WLMouse udev rules
+  template:
+    src: "{{ role_path }}/files/52-wlmouse.rules.j2"
+    dest: /etc/udev/rules.d/52-wlmouse.rules
+    mode: '0644'
+  become: true
+
+- name: Trigger udev rules reload
+  shell: "udevadm control --reload-rules && udevadm trigger"
+  changed_when: false
+  become: yes
