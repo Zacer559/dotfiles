@@ -35,6 +35,7 @@ default_roles:
   - backup
   - obsidian
   - wlmouse
+  - bluetooth-fix
 # Github
 git_user_name: "Zacer559"
 git_user_email: !vault |

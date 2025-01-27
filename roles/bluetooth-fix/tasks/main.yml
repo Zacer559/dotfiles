@@ -1,0 +1,49 @@
+- name: Download BCM20702A0 firmware
+  ansible.builtin.get_url:
+    url: "https://github.com/winterheart/broadcom-bt-firmware/raw/refs/heads/master/brcm/BCM20702A1-0b05-17cb.hcd"
+    dest: "{{ ansible_user_dir }}/Downloads/BCM20702A0-0b05-17cb.hcd"
+    mode: '0644'
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_gid }}"
+  become: no
+
+- name: Create brcm firmware directory
+  ansible.builtin.file:
+    path: /usr/lib/firmware/brcm
+    state: directory
+    mode: '0755'
+
+- name: Copy firmware to brcm directory
+  ansible.builtin.copy:
+    src: "{{ ansible_user_dir }}/Downloads/BCM20702A0-0b05-17cb.hcd"
+    dest: /usr/lib/firmware/brcm/
+    mode: '0644'
+
+- name: Create symlink for A1 compatibility
+  ansible.builtin.file:
+    src: /usr/lib/firmware/brcm/BCM20702A0-0b05-17cb.hcd
+    dest: /usr/lib/firmware/brcm/BCM20702A1-0b05-17cb.hcd
+    state: link
+    force: yes
+
+- name: Unload Bluetooth kernel modules
+  ansible.builtin.shell: "rmmod {{ module }}"
+  loop:
+    - btusb
+    - bluetooth
+  ignore_errors: yes
+  changed_when: false
+  loop_control:
+    loop_var: module
+  become: true
+
+- name: Load Bluetooth modules
+  ansible.builtin.modprobe:
+    name: "{{ module }}"
+    state: present
+  loop:
+    - btusb
+    - bluetooth
+  loop_control:
+    loop_var: module
+  become: true
