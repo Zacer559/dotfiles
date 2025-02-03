@@ -7,3 +7,8 @@
   kewlfft.aur.aur:
     name: "open-vm-tools"
     state: present
+
+- name: "VMware | {{ ansible_distribution }} | Install winbox"
+  kewlfft.aur.aur:
+    name: "winbox"
+    state: present
