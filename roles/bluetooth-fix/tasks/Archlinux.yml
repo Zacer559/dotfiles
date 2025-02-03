@@ -1,0 +1,15 @@
+---
+# Archlinux specific bluetooth configuration tasks
+- name: Ensure bluetooth packages are installed
+  pacman:
+    name:
+      - bluez
+      - bluez-utils
+    state: present
+    update_cache: yes
+
+- name: Enable and start bluetooth service
+  systemd:
+    name: bluetooth
+    enabled: yes
+    state: started
