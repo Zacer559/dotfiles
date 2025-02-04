@@ -1,0 +1,10 @@
+---
+- name: "Kubernetes | {{ ansible_distribution }} | Install kubernetes packages"
+  ansible.builtin.pacman:
+    name:
+      - kubectl
+      - kustomize
+      - helm
+    state: present
+  become: true
+
