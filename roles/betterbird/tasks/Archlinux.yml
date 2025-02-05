@@ -1,0 +1,5 @@
+---
+- name: "Betterbird | {{ ansible_distribution }} | Install betterbird-bin"
+  kewlfft.aur.aur:
+    name: "betterbird-bin"
+    state: present
