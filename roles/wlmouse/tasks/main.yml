@@ -3,7 +3,7 @@
   file:
     path: /etc/udev/rules.d/
     state: directory
-    mode: '0755'
+    mode: "0755"
     owner: root
     group: root
 
@@ -11,12 +11,12 @@
   shell: lsusb | grep -i 'wlmouse'
   register: lsusb_output
   changed_when: false
-  
+
 - name: Extract vendor/product IDs
   set_fact:
     wlmouse_id_vendor: "{{ lsusb_output.stdout | regex_replace('.*ID\\s+([0-9a-f]{4})[ :]([0-9a-f]{4}).*', '\\1') | lower }}"
     wlmouse_id_product: "{{ lsusb_output.stdout | regex_replace('.*ID\\s+([0-9a-f]{4})[ :]([0-9a-f]{4}).*', '\\2') | lower }}"
-  ignore_errors: yes
+  ignore_errors: true
   register: id_extract
 
 - name: Debug USB ID extraction
@@ -46,10 +46,10 @@
   template:
     src: "{{ role_path }}/templates/52-wlmouse.rules.j2"
     dest: /etc/udev/rules.d/52-wlmouse.rules
-    mode: '0644'
+    mode: "0644"
   become: true
 
 - name: Trigger udev rules reload
   shell: "udevadm control --reload-rules && udevadm trigger"
   changed_when: false
-  become: yes
+  become: true
