@@ -2,7 +2,7 @@
   ansible.builtin.get_url:
     url: "https://github.com/winterheart/broadcom-bt-firmware/raw/refs/heads/master/brcm/BCM20702A1-0b05-17cb.hcd"
     dest: "{{ ansible_user_dir }}/Downloads/BCM20702A0-0b05-17cb.hcd"
-    mode: '0644'
+    mode: "0644"
     owner: "{{ ansible_user_id }}"
     group: "{{ ansible_user_gid }}"
   become: no
@@ -11,13 +11,13 @@
   ansible.builtin.file:
     path: /usr/lib/firmware/brcm
     state: directory
-    mode: '0755'
+    mode: "0755"
 
 - name: Copy firmware to brcm directory
   ansible.builtin.copy:
     src: "{{ ansible_user_dir }}/Downloads/BCM20702A0-0b05-17cb.hcd"
     dest: /usr/lib/firmware/brcm/
-    mode: '0644'
+    mode: "0644"
 
 - name: Create symlink for A1 compatibility
   ansible.builtin.file:
@@ -25,6 +25,11 @@
     dest: /usr/lib/firmware/brcm/BCM20702A1-0b05-17cb.hcd
     state: link
     force: yes
+
+- name: Disable automatic switching to Bluetooth headset profile
+  ansible.builtin.shell: wpctl settings --save bluetooth.autoswitch-to-headset-profile false
+  become: no
+  changed_when: true
 
 - name: Unload Bluetooth kernel modules
   ansible.builtin.shell: "rmmod {{ module }}"
