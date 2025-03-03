@@ -7,47 +7,92 @@
     owner: root
     group: root
 
+# Part 1: Original WLMouse handling
 - name: Get WLMouse USB device info
   shell: lsusb | grep -i 'wlmouse'
   register: lsusb_output
   changed_when: false
+  ignore_errors: true
 
-- name: Extract vendor/product IDs
+- name: Extract vendor/product IDs for WLMouse
   set_fact:
     wlmouse_id_vendor: "{{ lsusb_output.stdout | regex_replace('.*ID\\s+([0-9a-f]{4})[ :]([0-9a-f]{4}).*', '\\1') | lower }}"
     wlmouse_id_product: "{{ lsusb_output.stdout | regex_replace('.*ID\\s+([0-9a-f]{4})[ :]([0-9a-f]{4}).*', '\\2') | lower }}"
   ignore_errors: true
   register: id_extract
+  when: lsusb_output.rc == 0 and lsusb_output.stdout | length > 0
 
-- name: Debug USB ID extraction
+- name: Debug USB ID extraction for WLMouse
   debug:
     msg: "Extracted IDs - Vendor: {{ wlmouse_id_vendor }}, Product: {{ wlmouse_id_product }}"
-  when: id_extract is succeeded
+  when: id_extract is succeeded and id_extract is not skipped
 
-- name: Validate extracted IDs
+- name: Validate extracted IDs for WLMouse
   assert:
     that:
       - wlmouse_id_vendor | length == 4
       - wlmouse_id_product | length == 4
       - wlmouse_id_vendor is regex('^[0-9a-f]{4}$')
       - wlmouse_id_product is regex('^[0-9a-f]{4}$')
-    fail_msg: "Invalid USB ID format detected. Vendor: '{{ wlmouse_id_vendor }}' Product: '{{ wlmouse_id_product }}'"
-  when: id_extract is succeeded
+    fail_msg: "Invalid USB ID format detected for WLMouse. Vendor: '{{ wlmouse_id_vendor }}' Product: '{{ wlmouse_id_product }}'"
+  when: id_extract is succeeded and id_extract is not skipped
 
-- name: Fail if IDs not extracted
-  fail:
-    msg: |-
-      Failed to extract USB IDs from lsusb output:
-      Raw output: {{ lsusb_output.stdout }}
-      Try manual extraction with: lsusb | grep -i wlmouse
-  when: id_extract is failed
+# Part 2: Detect all Keychron devices
+- name: Get all Keychron devices
+  shell: lsusb | grep -i 'keychron'
+  register: keychron_output
+  changed_when: false
+  ignore_errors: true
 
+- name: Extract all Keychron Device IDs
+  set_fact:
+    keychron_devices: "{{ keychron_devices | default([]) + [{'vendor': device_line | regex_replace('.*ID\\s+([0-9a-f]{4})[ :]([0-9a-f]{4}).*', '\\1') | lower, 'product': device_line | regex_replace('.*ID\\s+([0-9a-f]{4})[ :]([0-9a-f]{4}).*', '\\2') | lower, 'name': device_line | regex_replace('.*Keychron\\s+(.*)$', '\\1') | trim}] }}"
+  with_items: "{{ keychron_output.stdout_lines | default([]) }}"
+  loop_control:
+    loop_var: device_line
+  when: keychron_output.rc == 0 and keychron_output.stdout | length > 0
+
+- name: Show detected Keychron devices
+  debug:
+    msg: "Detected {{ keychron_devices | length }} Keychron device(s): {{ keychron_devices | map(attribute='name') | join(', ') }}"
+  when: keychron_devices is defined and keychron_devices | length > 0
+
+# Part 3: Detect all VIA-compatible keyboards
+- name: Get VIA device info
+  shell: lsusb | grep -E -i '(via|qmk|zmk|zsa|moonlander|planck|ergodox|glorious|gmmk)'
+  register: via_output
+  changed_when: false
+  ignore_errors: true
+
+- name: Extract all VIA-compatible device IDs
+  set_fact:
+    via_devices: "{{ via_devices | default([]) + [{'vendor': via_line | regex_replace('.*ID\\s+([0-9a-f]{4})[ :]([0-9a-f]{4}).*', '\\1') | lower, 'product': via_line | regex_replace('.*ID\\s+([0-9a-f]{4})[ :]([0-9a-f]{4}).*', '\\2') | lower, 'name': via_line | regex_replace('.*:\\s+(.*)$', '\\1') | trim}] }}"
+  with_items: "{{ via_output.stdout_lines | default([]) }}"
+  loop_control:
+    loop_var: via_line
+  when: via_output.rc == 0 and via_output.stdout | length > 0 and not (via_line | lower is search('keychron'))
+
+- name: Show detected VIA-compatible devices
+  debug:
+    msg: "Detected {{ via_devices | length }} VIA-compatible device(s): {{ via_devices | map(attribute='name') | join(', ') }}"
+  when: via_devices is defined and via_devices | length > 0
+
+# Part 4: Deploy rules files
 - name: Deploy WLMouse udev rules
   template:
     src: "{{ role_path }}/templates/52-wlmouse.rules.j2"
     dest: /etc/udev/rules.d/52-wlmouse.rules
     mode: "0644"
   become: true
+  when: id_extract is succeeded and id_extract is not skipped
+
+- name: Deploy keyboard udev rules
+  template:
+    src: "{{ role_path }}/templates/99-keyboard.rules.j2"
+    dest: /etc/udev/rules.d/99-keyboard.rules
+    mode: "0644"
+  become: true
+  when: keychron_devices is defined or via_devices is defined
 
 - name: Trigger udev rules reload
   shell: "udevadm control --reload-rules && udevadm trigger"
